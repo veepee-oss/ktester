@@ -19,3 +19,9 @@ Plan for the future:
 K-Tester is made with dotnet BlazorServer technology.
 
 About data configurations, all are saved inside the local storage of your browser. If you change your browser, you can export & import the configurations.
+
+# Contributing
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed information about how to contribute to the project.
+
+# LICENSE
+This project is licensed under the **ISC [LICENSE](LICENSE)**.
