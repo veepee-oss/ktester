@@ -1,0 +1,12 @@
+.table {
+    max-width: 100%;
+}
+.table > tbody > tr > td.offset {
+    max-width: 200px;
+}
+.table > tbody > tr > td.message {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 0;
+}

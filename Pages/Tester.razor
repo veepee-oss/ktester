@@ -1,0 +1,235 @@
+﻿@page "/"
+
+<h2><img class="logo" src="image/logo-mini.png" alt="logo" /> Kafka tester</h2>
+<hr />
+<div>
+    <form>
+        <div class="row">
+            <div class="col-10">
+                <div class="form-group row">
+                    <label for="settings" class="col-1 col-form-label text-right">Settings</label>
+                    <div class="col-5">
+                        <select id="settings" class="form-control" value="@_selectedSetting" @onchange="OnSelectSetting">
+                            <option value="">No registered</option>
+                            @foreach (var template in _kafkaSettings)
+                            {
+                                <option value=@template.Key>@template.Key</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    <form>
+        <div class="row">
+            <div class="col-5">
+                <div class="form-group row">
+                    <label for="brokers" class="col-2 col-form-label text-right">Brokers</label>
+                    <div class="col-10">
+                        <input type="text" class="form-control" id="brokers" placeholder="host" @bind="_setting.Brokers">
+                    </div>
+                </div>
+            </div>
+            <div class="col-5">
+                <div class="form-group row">
+                    <label for="topic" class="col-2 col-form-label text-right">Topic</label>
+                    <div class="col-10">
+                        <input type="text" class="form-control" id="topic" placeholder="topic" @bind="_setting.Topic">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-5">
+                <div class="form-group row">
+                    <label for="filter" class="col-2 col-form-label text-right">Filter</label>
+                    <div class="col-10">
+                        <input type="text" class="form-control" id="filter" @bind="_setting.Filter" @bind:event="oninput" @onkeyup="OnFilterChange">
+                    </div>
+                </div>
+            </div>
+            @* <div class="col-5"> *@
+            @*     <div class="form-group row"> *@
+            @*         <label for="filter" class="col-1 col-form-label text-right">Ordering offset</label> *@
+            @*         <div class="col-11"> *@
+            @*             @{ Console.WriteLine("_ordering");} *@
+            @*             @{ Console.WriteLine(_ordering);} *@
+            @*             <InputRadioGroup @bind-Value="_ordering"> *@
+            @*                 @foreach (var orderingEnum in (OrderingEnum[]) Enum *@
+            @*                     .GetValues(typeof(OrderingEnum))) *@
+            @*                 { *@
+            @*                     Console.WriteLine(orderingEnum); *@
+            @*                     <InputRadio Value="orderingEnum"/> *@
+            @*                     <text>&nbsp;</text>@orderingEnum<br> *@
+            @*                 } *@
+            @*             </InputRadioGroup> *@
+            @*         </div> *@
+            @*     </div> *@
+            @* </div> *@
+            <div class="col-5 text-right">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary" @onclick="OnSearch" disabled="@(string.IsNullOrWhiteSpace(_setting.Brokers) && string.IsNullOrWhiteSpace(_setting.Topic))">@(_isSearch ? "Stop" : "Search")</button>
+                    <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="sr-only">Toggle Dropdown</span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right">
+                        <button type="button" class="dropdown-item text-success" data-toggle="modal" data-target="#saveSettingModal" @onclick="OnSave" disabled="@(string.IsNullOrWhiteSpace(_setting.Brokers) || string.IsNullOrWhiteSpace(_setting.Topic))"><span class="oi oi-file"></span> Save</button>
+                        <button type="button" class="dropdown-item text-danger" data-toggle="modal" data-target="#deleteSettingModal" disabled="@string.IsNullOrWhiteSpace(_selectedSetting)"><span class="oi oi-trash"></span> Delete</button>
+                        <div class="dropdown-divider"></div>
+                        <button type="button" class="dropdown-item" data-toggle="modal" data-target="#sendMessageModal" disabled="@(string.IsNullOrWhiteSpace(_setting.Brokers) && string.IsNullOrWhiteSpace(_setting.Topic))">Send message</button>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#exportConfigurationModal" @onclick="ExportConfiguration">Export configuration</a>
+                        <a class="dropdown-item" href="#" data-toggle="modal" data-target="#importConfigurationModal">Import configuration</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+@if (_messages.Count > MAX_DISPLAY_ELEMENT)
+{
+    <div class="alert alert-primary" role="alert">
+        Display has been restricted to @MAX_DISPLAY_ELEMENT elements. Use <strong>Filter</strong> field to precise what you seek. 
+    </div>
+}
+<div class="spinner @(_isSearch ? "visible" : "invisible")">
+  <div class="rect1"></div>
+  <div class="rect2"></div>
+  <div class="rect3"></div>
+  <div class="rect4"></div>
+  <div class="rect5"></div>
+</div>
+@if (_messages.Any() || _isSearch)
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Offset</th>
+            <th>Message (@_messages.Count item(s))</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var message in _messages.Where(DoFilter).Take(MAX_DISPLAY_ELEMENT))
+        {
+            <tr>
+                <td class="offset">@message.Offset</td>
+                <td class="message">
+                    <button class="btn btn-light" @onclick="() => OnSelectMessage(message)"><span class="oi oi-clipboard"></span></button>
+                    @message.Message
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="text-center">No content</div>
+}
+<pre class="text-danger">
+@foreach (var error in _errors)
+{
+    @(error + "\n")
+}
+</pre>
+
+<div class="modal fade" id="sendMessageModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Message</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <textarea class="form-control" id="message" rows="5" placeholder="{ ... }" @bind="_newMessage" @bind:event="oninput" @onkeyup="OnNewMessageChange"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" @onclick="SendMessage" disabled="@string.IsNullOrWhiteSpace(_newMessage)">Send</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="saveSettingModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Configuration name</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control" id="settingName" placeholder="name" @bind="_saveSettingName">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" @onclick="Save" disabled="@string.IsNullOrWhiteSpace(_saveSettingName)">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteSettingModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure to delete "@_selectedSetting"?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" @onclick="Delete">Delete</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="importConfigurationModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <textarea class="form-control" id="importConfigurationString" rows="5" @bind="_importConfigurationString"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" @onclick="ImportConfiguration" disabled="@string.IsNullOrWhiteSpace(_importConfigurationString)">Import</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="exportConfigurationModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Export configuration</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <textarea class="form-control" id="exportConfigurationString" readonly rows="5" @bind="_exportConfigurationString"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
