@@ -14,4 +14,5 @@ FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS runtime
 WORKDIR /app
 COPY --from=publish /app/artifacts /app
 EXPOSE 5000
+ENV ASPNETCORE_ENVIRONMENT=Production
 ENTRYPOINT dotnet KafkaTester.dll
