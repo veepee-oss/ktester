@@ -1,6 +1,6 @@
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS restore
 WORKDIR /app
-COPY kafkatester.csproj .
+COPY KafkaTester.csproj .
 RUN dotnet restore
 
 FROM restore AS build
