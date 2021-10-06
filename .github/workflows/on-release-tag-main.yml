@@ -36,5 +36,4 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         push: true
-        image: vptech/k-tester
-        addlatest: true
+        tags: vptech/k-tester:latest
