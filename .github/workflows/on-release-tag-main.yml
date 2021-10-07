@@ -37,8 +37,8 @@ jobs:
       uses: docker/metadata-action@v3
       with:
         images: vptech/k-tester
-      tags: |
-        type=semver,pattern={{version}}
+        tags: |
+          type=semver,pattern={{version}}
     - name: Build and push
       uses: docker/build-push-action@v2
       with:
