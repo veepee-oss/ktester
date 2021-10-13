@@ -1,15 +1,22 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using KafkaTester.Model;
+using Microsoft.Extensions.Logging;
 
 namespace KafkaTester.Service
 {
     public class KafkaTesterService
     {
+        private readonly ILogger<KafkaTesterService> _logger;
+
+        public KafkaTesterService(ILogger<KafkaTesterService> logger)
+        {
+            _logger = logger;
+        }
+
         public async IAsyncEnumerable<KafkaMessage> RunKafkaTesterServiceAsync(CancellationTokenSource cts, string groupId, string servers, string topic, Action<string> onError)
         {
             var conf = new ConsumerConfig
@@ -42,7 +49,7 @@ namespace KafkaTester.Service
                     }
                     catch (ConsumeException e)
                     {
-                        Console.WriteLine($"Error occured: {e.Error.Reason}");
+                        _logger.LogError($"Error occured: {e.Error.Reason}");
                         onError(e.Error.Reason);
                     }
                     catch (OperationCanceledException)
@@ -57,7 +64,7 @@ namespace KafkaTester.Service
 
         public async Task SendMessageAsync(string servers, string topic, string message)
         {
-            Console.WriteLine("Call SendMessageAsync");
+            _logger.LogInformation("Sending message...");
             var conf = new ConsumerConfig
             {
                 BootstrapServers = servers
@@ -67,7 +74,7 @@ namespace KafkaTester.Service
             {
                 await p.ProduceAsync(topic, new Message<Null, string> { Value = message });
             }
-            Console.WriteLine("Message sended");
+            _logger.LogInformation("Message sended");
         }
     }
 }

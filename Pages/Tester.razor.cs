@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using KafkaTester.Model;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.JSInterop;
 using KafkaTester.Service;
 
@@ -26,7 +23,7 @@ namespace KafkaTester.Pages
         private string _oldFilterValue;
         private string _saveSettingName;
         private KafkaSetting _setting = new();
-        private bool _isSearch = false;
+        private bool _isSearch;
         private CancellationTokenSource _cancellationToken;
         private string _newMessage;
         private readonly ConcurrentBag<KafkaMessage> _messages = new();
@@ -51,13 +48,11 @@ namespace KafkaTester.Pages
             {
                 if (_isSearch && _cancellationToken is {IsCancellationRequested: false})
                 {
-                    Console.WriteLine("Stop");
                     _cancellationToken?.Cancel();
                     _isSearch = false;
                     return;
                 }
             
-                Console.WriteLine("Started");
                 _messages.Clear();
                 _errors.Clear();
                 using (_cancellationToken = new CancellationTokenSource(TimeSpan.FromDays(1)))
@@ -67,7 +62,6 @@ namespace KafkaTester.Pages
                     {
                         if (_cancellationToken.IsCancellationRequested)
                             return;
-                        Console.WriteLine("Message received - " + message.Message);
                         
                         _messages.Add(message);
                         StateHasChanged();
@@ -179,7 +173,7 @@ namespace KafkaTester.Pages
             _saveSettingName = _selectedSetting;
         }
 
-        private async Task SaveLocalStorageAsync<T>(string key, T value, bool isBase64 = false)
+        private async Task SaveLocalStorageAsync<T>(string key, T value)
         {
             if (value == null)
                 return;

@@ -110,7 +110,7 @@
         </tr>
         </thead>
         <tbody>
-        @foreach (var message in _messages.Where(DoFilter).Take(MAX_DISPLAY_ELEMENT))
+        @foreach (var message in _messages.Where(DoFilter).OrderByDescending(m => m.Offset).Take(MAX_DISPLAY_ELEMENT))
         {
             <tr>
                 <td class="offset">@message.Offset</td>
