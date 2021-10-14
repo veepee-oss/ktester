@@ -26,6 +26,8 @@ K-Tester is made with dotnet [BlazorServer](https://docs.microsoft.com/en-us/asp
 
 About data configurations, no database. All data are saved inside the local storage of your browser. If you change your browser, you can export & import the configurations.
 
+By default, groupid used to connect is a generated `GUID`. This one is refreshed each time a new query is asked.
+
 # Contributing
 See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed information about how to contribute to the project.
 

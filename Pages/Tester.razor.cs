@@ -95,15 +95,17 @@ namespace KafkaTester.Pages
 
         private async Task Save()
         {
-            if (_kafkaSettings.ContainsKey(_saveSettingName))
+            var settings = await GetLocalStorageAsync<Dictionary<string, KafkaSetting>>("KafkaSettings");
+
+            if (settings.ContainsKey(_saveSettingName))
             {
-                _kafkaSettings[_saveSettingName] = _setting;
+                settings[_saveSettingName] = _setting;
             }
             else
             {
-                _kafkaSettings.Add(_saveSettingName, _setting);
+                settings.Add(_saveSettingName, _setting);
             }
-            await SaveLocalStorageAsync("KafkaSettings", _kafkaSettings);
+            await SaveLocalStorageAsync("KafkaSettings", settings);
             await Read();
             _selectedSetting = _saveSettingName;
             _saveSettingName = null;
