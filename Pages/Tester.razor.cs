@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
@@ -26,7 +25,7 @@ namespace KafkaTester.Pages
         private bool _isSearch;
         private CancellationTokenSource _cancellationToken;
         private string _newMessage;
-        private readonly ConcurrentBag<KafkaMessage> _messages = new();
+        private readonly LinkedList<KafkaMessage> _messages = new();
         private Dictionary<string, KafkaSetting> _kafkaSettings = new();
         private string _selectedSetting;
         private string _exportConfigurationString;
@@ -63,7 +62,7 @@ namespace KafkaTester.Pages
                         if (_cancellationToken.IsCancellationRequested)
                             return;
                         
-                        _messages.Add(message);
+                        _messages.AddFirst(message);
                         StateHasChanged();
                     }
                 }
