@@ -24,3 +24,7 @@ window.closeSendMessageModal = () => {
 window.showExportConfigurationModal = () => {
     $('#exportConfigurationModal').modal('show');
 };
+
+window.openSeeMessageModal = () => {
+    $('#seeMessageModal').modal('show');
+};

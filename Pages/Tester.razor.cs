@@ -25,6 +25,7 @@ namespace KafkaTester.Pages
         private bool _isSearch;
         private CancellationTokenSource _cancellationToken;
         private string _newMessage;
+        private string _selectedMessage;
         private readonly LinkedList<KafkaMessage> _messages = new();
         private Dictionary<string, KafkaSetting> _kafkaSettings = new();
         private string _selectedSetting;
@@ -87,9 +88,9 @@ namespace KafkaTester.Pages
             StateHasChanged();
         }
 
-        private void OnSelectMessage(KafkaMessage message)
+        private void CopyMessage(string message)
         {
-            JsRuntime.InvokeVoidAsync("clipboardCopy.copyText", message.Message).ConfigureAwait(true);
+            JsRuntime.InvokeVoidAsync("clipboardCopy.copyText", message).ConfigureAwait(true);
         }
 
         private async Task Save()
@@ -141,7 +142,16 @@ namespace KafkaTester.Pages
             _newMessage = string.Empty;
             await JsRuntime.InvokeVoidAsync("closeSendMessageModal");
         }
-        
+
+        private async Task SeeMessage(KafkaMessage message)
+        {
+            if (IsValidJson(message.Message))
+                _selectedMessage = JsonPrettify(message.Message);
+            else
+                _selectedMessage = message.Message;
+            await JsRuntime.InvokeVoidAsync("openSeeMessageModal");
+        }
+
         private bool DoFilter(KafkaMessage message)
         {
             return string.IsNullOrWhiteSpace(_setting.Filter)
@@ -191,6 +201,27 @@ namespace KafkaTester.Pages
             if (result == null)
                 return (T)Activator.CreateInstance(typeof(T));
             return isPrimitive ? (T)Convert.ChangeType(result, typeof(T)) : JsonSerializer.Deserialize<T>(Encoding.UTF8.GetString(Convert.FromBase64String(result)));
+        }
+
+        private static string JsonPrettify(string json)
+        {
+            return JsonSerializer.Serialize(JsonDocument.Parse(json), new JsonSerializerOptions { WriteIndented = true });
+        }
+
+        private bool IsValidJson(string source)
+        {
+            if (source == null)
+                return false;
+
+            try
+            {
+                JsonDocument.Parse(source);
+                return true;
+            }
+            catch (JsonException)
+            {
+                return false;
+            }
         }
     }
 }

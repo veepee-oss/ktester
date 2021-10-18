@@ -43,7 +43,8 @@ namespace KafkaTester.Service
                             message = new KafkaMessage
                             {
                                 Message = cr.Message.Value,
-                                Offset = cr.TopicPartitionOffset.Offset.ToString()
+                                Partition = cr.TopicPartitionOffset.Partition.Value,
+                                Offset = cr.TopicPartitionOffset.Offset.Value
                             };
                         });
                     }

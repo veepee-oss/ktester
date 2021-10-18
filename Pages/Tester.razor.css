@@ -1,8 +1,12 @@
 .table {
     max-width: 100%;
 }
-.table > tbody > tr > td.offset {
-    max-width: 200px;
+.modal-content {
+    max-height: 95vh;
+    overflow-y: auto;
+}
+.modal-body {
+    overflow: auto;
 }
 .table > tbody > tr > td.message {
     white-space: nowrap;

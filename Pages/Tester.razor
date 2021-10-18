@@ -1,6 +1,6 @@
 ﻿@page "/"
 
-<h2><img class="logo" src="image/logo-mini.png" alt="logo" /> Kafka tester</h2>
+<h2><img class="logo" src="image/logo-mini.png" alt="logo" /> K-Tester</h2>
 <hr />
 <div>
     <form>
@@ -49,24 +49,6 @@
                     </div>
                 </div>
             </div>
-            @* <div class="col-5"> *@
-            @*     <div class="form-group row"> *@
-            @*         <label for="filter" class="col-1 col-form-label text-right">Ordering offset</label> *@
-            @*         <div class="col-11"> *@
-            @*             @{ Console.WriteLine("_ordering");} *@
-            @*             @{ Console.WriteLine(_ordering);} *@
-            @*             <InputRadioGroup @bind-Value="_ordering"> *@
-            @*                 @foreach (var orderingEnum in (OrderingEnum[]) Enum *@
-            @*                     .GetValues(typeof(OrderingEnum))) *@
-            @*                 { *@
-            @*                     Console.WriteLine(orderingEnum); *@
-            @*                     <InputRadio Value="orderingEnum"/> *@
-            @*                     <text>&nbsp;</text>@orderingEnum<br> *@
-            @*                 } *@
-            @*             </InputRadioGroup> *@
-            @*         </div> *@
-            @*     </div> *@
-            @* </div> *@
             <div class="col-5 text-right">
                 <div class="btn-group">
                     <button type="button" class="btn btn-primary" @onclick="OnSearch" disabled="@(string.IsNullOrWhiteSpace(_setting.Brokers) && string.IsNullOrWhiteSpace(_setting.Topic))">@(_isSearch ? "Stop" : "Search")</button>
@@ -105,17 +87,17 @@
     <table class="table">
         <thead>
         <tr>
-            <th>Offset</th>
-            <th>Message (@_messages.Count item(s))</th>
+            <th class="col-2">Offset (Partition)</th>
+            <th class="col">Message (@_messages.Count item(s))</th>
         </tr>
         </thead>
         <tbody>
         @foreach (var message in _messages.Where(DoFilter).Take(MAX_DISPLAY_ELEMENT))
         {
             <tr>
-                <td class="offset">@message.Offset</td>
+                <td class="offset">@message.Offset (@message.Partition)</td>
                 <td class="message">
-                    <button class="btn btn-light" @onclick="() => OnSelectMessage(message)"><span class="oi oi-clipboard"></span></button>
+                    <button class="btn btn-light" @onclick="() => SeeMessage(message)"><span class="oi oi-eye"></span></button>
                     @message.Message
                 </td>
             </tr>
@@ -133,6 +115,26 @@ else
     @(error + "\n")
 }
 </pre>
+
+<div class="modal fade" id="seeMessageModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Message</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <pre>@_selectedMessage</pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" @onclick="() => CopyMessage(_selectedMessage)">Copy</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="modal fade" id="sendMessageModal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
