@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using KafkaTester.Model;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -16,6 +17,7 @@ namespace KafkaTester.Pages
     {
         [Inject] private KafkaTesterService TesterService { get; set; }
         [Inject] private IJSRuntime JsRuntime { get; set; }
+        [Inject] public NavigationManager NavigationManager { get; set; }
 
         private const int MAX_DISPLAY_ELEMENT = 1000;
         // private OrderingEnum _ordering = OrderingEnum.Desc;
@@ -29,6 +31,7 @@ namespace KafkaTester.Pages
         private readonly LinkedList<KafkaMessage> _messages = new();
         private Dictionary<string, KafkaSetting> _kafkaSettings = new();
         private string _selectedSetting;
+        private string _shareConfigurationString;
         private string _exportConfigurationString;
         private string _importConfigurationString;
         private readonly List<string> _errors = new();
@@ -39,6 +42,13 @@ namespace KafkaTester.Pages
             {
                 await Read();
                 StateHasChanged();
+
+                if (SetShareSetting())
+                {
+                    StateHasChanged();
+                    await OnSearch();
+                    StateHasChanged();
+                }
             }
         }
 
@@ -184,6 +194,11 @@ namespace KafkaTester.Pages
             _saveSettingName = _selectedSetting;
         }
 
+        private void OnShare()
+        {
+            _shareConfigurationString = GetSharedSetting();
+        }
+
         private async Task SaveLocalStorageAsync<T>(string key, T value)
         {
             if (value == null)
@@ -222,6 +237,35 @@ namespace KafkaTester.Pages
             {
                 return false;
             }
+        }
+
+        private bool SetShareSetting()
+        {
+            var builder = new UriBuilder(NavigationManager.Uri);
+            var query = HttpUtility.ParseQueryString(builder.Query);
+
+            if (query["b"] == null || query["t"] == null)
+                return false;
+
+            _setting.Brokers = query["b"];
+            _setting.Topic = query["t"];
+            if (query["t"] != null)
+                _setting.Filter = query["f"];
+
+            return true;
+        }
+
+        private string GetSharedSetting()
+        {
+            var builder = new UriBuilder(NavigationManager.BaseUri);
+            var query = HttpUtility.ParseQueryString(builder.Query);
+            query["b"] = _setting.Brokers;
+            query["t"] = _setting.Topic;
+            if (!string.IsNullOrWhiteSpace(_setting.Filter))
+                query["f"] = _setting.Filter;
+            builder.Query = query.ToString();
+
+            return builder.ToString();
         }
     }
 }

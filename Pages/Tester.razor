@@ -63,6 +63,8 @@
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="#" data-toggle="modal" data-target="#exportConfigurationModal" @onclick="ExportConfiguration">Export configuration</a>
                         <a class="dropdown-item" href="#" data-toggle="modal" data-target="#importConfigurationModal">Import configuration</a>
+                        <div class="dropdown-divider"></div>
+                        <button type="button" class="dropdown-item" data-toggle="modal" data-target="#shareConfigurationModal" @onclick="OnShare" disabled="@(string.IsNullOrWhiteSpace(_setting.Brokers) || string.IsNullOrWhiteSpace(_setting.Topic))"><span class="oi oi-share"></span> Share</button>
                     </div>
                 </div>
             </div>
@@ -228,6 +230,25 @@ else
             </div>
             <div class="modal-body">
                 <textarea class="form-control" id="exportConfigurationString" readonly rows="5" @bind="_exportConfigurationString"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="shareConfigurationModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Share configuration</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <textarea class="form-control" id="shareConfigurationString" readonly rows="2" @bind="_shareConfigurationString"></textarea>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
