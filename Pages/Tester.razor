@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using KafkaTester.Model
 
 <h2><img class="logo" src="image/logo-mini.png" alt="logo" /> K-Tester</h2>
 <hr />
@@ -71,12 +72,7 @@
         </div>
     </form>
 </div>
-@if (_messages.Count > MAX_DISPLAY_ELEMENT)
-{
-    <div class="alert alert-primary" role="alert">
-        Display has been restricted to @MAX_DISPLAY_ELEMENT elements. Use <strong>Filter</strong> field to precise what you seek. 
-    </div>
-}
+
 <div class="spinner @(_isSearch ? "visible" : "invisible")">
   <div class="rect1"></div>
   <div class="rect2"></div>
@@ -90,12 +86,11 @@
         <thead>
         <tr>
             <th class="col-2">Offset (Partition)</th>
-            <th class="col">Message (@_messages.Count item(s))</th>
+            <th class="col">Message (@(IsFiltering() ? $"{_filterMessages.Count} item(s) / {_messages.Count} item(s)" : $"{_messages.Count} item(s)")</th>
         </tr>
         </thead>
         <tbody>
-        @foreach (var message in _messages.Where(DoFilter).Take(MAX_DISPLAY_ELEMENT))
-        {
+        <Virtualize Context="message" Items="@_filterMessages" TItem="KafkaMessage">
             <tr>
                 <td class="offset">@message.Offset (@message.Partition)</td>
                 <td class="message">
@@ -103,7 +98,7 @@
                     @message.Message
                 </td>
             </tr>
-        }
+        </Virtualize>
         </tbody>
     </table>
 }

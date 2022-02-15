@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -19,7 +20,6 @@ namespace KafkaTester.Pages
         [Inject] private IJSRuntime JsRuntime { get; set; }
         [Inject] public NavigationManager NavigationManager { get; set; }
 
-        private const int MAX_DISPLAY_ELEMENT = 1000;
         // private OrderingEnum _ordering = OrderingEnum.Desc;
         private string _oldFilterValue;
         private string _saveSettingName;
@@ -29,6 +29,7 @@ namespace KafkaTester.Pages
         private string _newMessage;
         private string _selectedMessage;
         private readonly LinkedList<KafkaMessage> _messages = new();
+        private ICollection<KafkaMessage> _filterMessages => _messages.Where(DoFilter).ToArray();
         private Dictionary<string, KafkaSetting> _kafkaSettings = new();
         private string _selectedSetting;
         private string _shareConfigurationString;
@@ -164,9 +165,13 @@ namespace KafkaTester.Pages
 
         private bool DoFilter(KafkaMessage message)
         {
-            return string.IsNullOrWhiteSpace(_setting.Filter)
-                   || !string.IsNullOrWhiteSpace(_setting.Filter)
-                   && message.Message.Contains(_setting.Filter, StringComparison.InvariantCultureIgnoreCase);
+            return !IsFiltering() 
+                   || IsFiltering() && message.Message.Contains(_setting.Filter, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        private bool IsFiltering()
+        {
+            return !string.IsNullOrWhiteSpace(_setting.Filter);
         }
 
         private void OnError(string error)
