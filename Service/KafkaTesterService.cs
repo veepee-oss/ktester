@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
@@ -44,7 +45,8 @@ namespace KafkaTester.Service
                             {
                                 Message = cr.Message.Value,
                                 Partition = cr.TopicPartitionOffset.Partition.Value,
-                                Offset = cr.TopicPartitionOffset.Offset.Value
+                                Offset = cr.TopicPartitionOffset.Offset.Value,
+                                Headers = cr.Message.Headers.ToDictionary(h => h.Key, h => System.Text.Encoding.Default.GetString(h.GetValueBytes()))
                             };
                         });
                     }

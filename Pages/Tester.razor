@@ -74,31 +74,31 @@
 </div>
 
 <div class="spinner @(_isSearch ? "visible" : "invisible")">
-  <div class="rect1"></div>
-  <div class="rect2"></div>
-  <div class="rect3"></div>
-  <div class="rect4"></div>
-  <div class="rect5"></div>
+    <div class="rect1"></div>
+    <div class="rect2"></div>
+    <div class="rect3"></div>
+    <div class="rect4"></div>
+    <div class="rect5"></div>
 </div>
 @if (_messages.Any() || _isSearch)
 {
     <table class="table">
         <thead>
-        <tr>
-            <th class="col-2">Offset (Partition)</th>
-            <th class="col">Message (@(IsFiltering() ? $"{_filterMessages.Count} item(s) / {_messages.Count} item(s)" : $"{_messages.Count} item(s)")</th>
-        </tr>
+            <tr>
+                <th class="col-2">Offset (Partition)</th>
+                <th class="col">Message (@(IsFiltering() ? $"{_filterMessages.Count} item(s) / {_messages.Count} item(s)" : $"{_messages.Count} item(s)")</th>
+            </tr>
         </thead>
         <tbody>
-        <Virtualize Context="message" Items="@_filterMessages" TItem="KafkaMessage">
-            <tr>
-                <td class="offset">@message.Offset (@message.Partition)</td>
-                <td class="message">
-                    <button class="btn btn-light" @onclick="() => SeeMessage(message)"><span class="oi oi-eye"></span></button>
-                    @message.Message
-                </td>
-            </tr>
-        </Virtualize>
+            <Virtualize Context="message" Items="@_filterMessages" TItem="KafkaMessage">
+                <tr>
+                    <td class="offset">@message.Offset (@message.Partition)</td>
+                    <td class="message">
+                        <button class="btn btn-light" @onclick="() => SeeMessage(message)"><span class="oi oi-eye"></span></button>
+                        @message.Message
+                    </td>
+                </tr>
+            </Virtualize>
         </tbody>
     </table>
 }
@@ -107,29 +107,57 @@ else
     <div class="text-center">No content</div>
 }
 <pre class="text-danger">
-@foreach (var error in _errors)
-{
-    @(error + "\n")
-}
+    @foreach (var error in _errors)
+    {
+        @(error + "\n")
+    }
 </pre>
 
 <div class="modal fade" id="seeMessageModal" tabindex="-1" role="dialog">
+
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Message</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+        @if (_selectedMessage != null)
+        {
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Message</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="headers">
+                        @if (_selectedMessage.Headers.Any())
+                        {
+                            <a class="btn btn-outline-dark collapsed" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+                                <i class="oi oi-chevron-bottom pull-right"></i> @_selectedMessage.Headers.Count Header(s)
+                            </a>
+                            <div class="collapse" id="collapseExample">
+                                <div class="card card-body">
+                                    @foreach (var header in _selectedMessage.Headers)
+                                    {
+                                        <div class="row">
+                                            <div class="col-6">@header.Key</div>
+                                            <div class="col-6">@header.Value</div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="font-italic">No header</div>
+                        }
+                    </div>
+                    <hr />
+                    <pre>@JsonPrettify(_selectedMessage.Message)</pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" @onclick="() => CopyMessage(JsonPrettify(_selectedMessage.Message))">Copy</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
             </div>
-            <div class="modal-body">
-                <pre>@_selectedMessage</pre>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" @onclick="() => CopyMessage(_selectedMessage)">Copy</button>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            </div>
-        </div>
+        }
     </div>
 </div>
 

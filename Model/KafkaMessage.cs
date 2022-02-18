@@ -1,4 +1,6 @@
 
+using System.Collections.Generic;
+
 namespace KafkaTester.Model
 {
     public class KafkaMessage
@@ -7,6 +9,8 @@ namespace KafkaTester.Model
 
         public long Offset { get; set; }
 
-        public string Message { get; set; } 
+        public string Message { get; set; }
+
+        public Dictionary<string, string> Headers { get; set; }
     }
 }

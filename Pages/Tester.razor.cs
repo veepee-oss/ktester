@@ -27,7 +27,7 @@ namespace KafkaTester.Pages
         private bool _isSearch;
         private CancellationTokenSource _cancellationToken;
         private string _newMessage;
-        private string _selectedMessage;
+        private KafkaMessage _selectedMessage;
         private readonly LinkedList<KafkaMessage> _messages = new();
         private ICollection<KafkaMessage> _filterMessages => _messages.Where(DoFilter).ToArray();
         private Dictionary<string, KafkaSetting> _kafkaSettings = new();
@@ -156,10 +156,7 @@ namespace KafkaTester.Pages
 
         private async Task SeeMessage(KafkaMessage message)
         {
-            if (IsValidJson(message.Message))
-                _selectedMessage = JsonPrettify(message.Message);
-            else
-                _selectedMessage = message.Message;
+            _selectedMessage = message;
             await JsRuntime.InvokeVoidAsync("openSeeMessageModal");
         }
 
@@ -223,9 +220,12 @@ namespace KafkaTester.Pages
             return isPrimitive ? (T)Convert.ChangeType(result, typeof(T)) : JsonSerializer.Deserialize<T>(Encoding.UTF8.GetString(Convert.FromBase64String(result)));
         }
 
-        private static string JsonPrettify(string json)
+        private string JsonPrettify(string json)
         {
-            return JsonSerializer.Serialize(JsonDocument.Parse(json), new JsonSerializerOptions { WriteIndented = true });
+            if (IsValidJson(json))
+                return JsonSerializer.Serialize(JsonDocument.Parse(json), new JsonSerializerOptions { WriteIndented = true });
+            else
+                return json;
         }
 
         private bool IsValidJson(string source)

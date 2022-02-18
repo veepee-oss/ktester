@@ -14,3 +14,12 @@
     text-overflow: ellipsis;
     max-width: 0;
 }
+
+.headers .oi
+{
+    transition: .3s transform ease-in-out;
+}
+.headers .collapsed .oi
+{
+    transform: rotate(-90deg)
+}
