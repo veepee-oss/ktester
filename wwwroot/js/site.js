@@ -1,7 +1,7 @@
 window.clipboardCopy = {
     copyText: function (text) {
         navigator.clipboard.writeText(text).then(function () {
-            alert("Copied to clipboard!");
+            console.log("Copied to clipboard!");
         })
         .catch(function (error) {
             alert(error);
@@ -30,7 +30,6 @@ window.openSeeMessageModal = () => {
 
     if (!shownEventLoaded) {
         $('#seeMessageModal').on('shown.bs.modal', function() {
-            console.log('loaded');
             hljs.highlightAll();
         });
         shownEventLoaded = true;
