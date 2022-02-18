@@ -11,6 +11,12 @@ namespace KafkaTester.Model
 
         public string Message { get; set; }
 
-        public Dictionary<string, string> Headers { get; set; }
+        public List<KafkaHeader> Headers { get; set; } = new();
+    }
+
+    public class KafkaHeader
+    {
+        public string Key { get; set; }
+        public string Value { get; set; }
     }
 }

@@ -46,7 +46,7 @@ namespace KafkaTester.Service
                                 Message = cr.Message.Value,
                                 Partition = cr.TopicPartitionOffset.Partition.Value,
                                 Offset = cr.TopicPartitionOffset.Offset.Value,
-                                Headers = cr.Message.Headers.ToDictionary(h => h.Key, h => System.Text.Encoding.Default.GetString(h.GetValueBytes()))
+                                Headers = cr.Message.Headers.Select(h => new KafkaHeader { Key = h.Key, Value = System.Text.Encoding.Default.GetString(h.GetValueBytes()) }).ToList()
                             };
                         });
                     }
@@ -65,7 +65,7 @@ namespace KafkaTester.Service
             }
         }
 
-        public async Task SendMessageAsync(string servers, string topic, string message)
+        public async Task SendMessageAsync(string servers, string topic, KafkaMessage message)
         {
             _logger.LogInformation("Sending message...");
             var conf = new ConsumerConfig
@@ -73,9 +73,18 @@ namespace KafkaTester.Service
                 BootstrapServers = servers
             };
 
+            Headers headers = new Headers();
+            foreach (var item in message.Headers)
+            {
+                if (item.Key == null || item.Value == null)
+                    continue;
+
+                headers.Add(item.Key, System.Text.Encoding.Default.GetBytes(item.Value));
+            }
+
             using (var p = new ProducerBuilder<Null, string>(conf).Build())
             {
-                await p.ProduceAsync(topic, new Message<Null, string> { Value = message });
+                await p.ProduceAsync(topic, new Message<Null, string> { Value = message.Message, Headers = headers });
             }
             _logger.LogInformation("Message sended");
         }

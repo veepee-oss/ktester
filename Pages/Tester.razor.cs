@@ -26,7 +26,7 @@ namespace KafkaTester.Pages
         private KafkaSetting _setting = new();
         private bool _isSearch;
         private CancellationTokenSource _cancellationToken;
-        private string _newMessage;
+        private KafkaMessage _newMessage= new KafkaMessage();
         private KafkaMessage _selectedMessage;
         private readonly LinkedList<KafkaMessage> _messages = new();
         private ICollection<KafkaMessage> _filterMessages => _messages.Where(DoFilter).ToArray();
@@ -147,10 +147,20 @@ namespace KafkaTester.Pages
             _setting = setting;
         }
 
+        private void CreateHeader()
+        {
+            _newMessage.Headers.Add(new KafkaHeader());
+        }
+
+        private void RemoveHeader(KafkaHeader header)
+        {
+            _newMessage.Headers.Remove(header);
+        }
+
         private async Task SendMessage()
         {
             await TesterService.SendMessageAsync(_setting.Brokers, _setting.Topic, _newMessage);
-            _newMessage = string.Empty;
+            _newMessage = new KafkaMessage();
             await JsRuntime.InvokeVoidAsync("closeSendMessageModal");
         }
 

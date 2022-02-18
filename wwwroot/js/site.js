@@ -1,5 +1,5 @@
 window.clipboardCopy = {
-    copyText: function(text) {
+    copyText: function (text) {
         navigator.clipboard.writeText(text).then(function () {
             alert("Copied to clipboard!");
         })
@@ -25,6 +25,16 @@ window.showExportConfigurationModal = () => {
     $('#exportConfigurationModal').modal('show');
 };
 
+var shownEventLoaded = false;
 window.openSeeMessageModal = () => {
+
+    if (!shownEventLoaded) {
+        $('#seeMessageModal').on('shown.bs.modal', function() {
+            console.log('loaded');
+            hljs.highlightAll();
+        });
+        shownEventLoaded = true;
+    }
+
     $('#seeMessageModal').modal('show');
 };

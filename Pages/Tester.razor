@@ -114,7 +114,6 @@ else
 </pre>
 
 <div class="modal fade" id="seeMessageModal" tabindex="-1" role="dialog">
-
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         @if (_selectedMessage != null)
         {
@@ -126,35 +125,45 @@ else
                     </button>
                 </div>
                 <div class="modal-body">
+                    <pre><code class="@(IsValidJson(_selectedMessage.Message) ? "language-json" : "nohighlight")">@JsonPrettify(_selectedMessage.Message)</code></pre>
+                </div>
+                <div class="modal-subbody">
                     <div class="headers">
                         @if (_selectedMessage.Headers.Any())
                         {
-                            <a class="btn btn-outline-dark collapsed" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
-                                <i class="oi oi-chevron-bottom pull-right"></i> @_selectedMessage.Headers.Count Header(s)
-                            </a>
                             <div class="collapse" id="collapseExample">
                                 <div class="card card-body">
+                                    <div class="row font-weight-bold">
+                                        <div class="col">Key</div>
+                                        <div class="col">Value</div>
+                                    </div>
                                     @foreach (var header in _selectedMessage.Headers)
                                     {
                                         <div class="row">
-                                            <div class="col-6">@header.Key</div>
-                                            <div class="col-6">@header.Value</div>
+                                            <div class="col">@header.Key</div>
+                                            <div class="col">@header.Value</div>
                                         </div>
                                     }
                                 </div>
                             </div>
                         }
-                        else
-                        {
-                            <div class="font-italic">No header</div>
-                        }
                     </div>
-                    <hr />
-                    <pre>@JsonPrettify(_selectedMessage.Message)</pre>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" @onclick="() => CopyMessage(JsonPrettify(_selectedMessage.Message))">Copy</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <div class="modal-footer justify-content-between">
+                    @if (_selectedMessage.Headers.Any())
+                    {
+                        <a class="btn-header btn btn-outline-dark collapsed" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+                            <i class="oi oi-caret-top pull-right"></i> @_selectedMessage.Headers.Count Header(s)
+                        </a>
+                    }
+                    else
+                    {
+                        <div class="font-italic">No header</div>
+                    }
+                    <div>
+                        <button type="button" class="btn btn-light" @onclick="() => CopyMessage(JsonPrettify(_selectedMessage.Message))">Copy</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
                 </div>
             </div>
         }
@@ -171,10 +180,35 @@ else
                 </button>
             </div>
             <div class="modal-body">
-                <textarea class="form-control" id="message" rows="5" placeholder="{ ... }" @bind="_newMessage" @bind:event="oninput" @onkeyup="OnNewMessageChange"></textarea>
+                <div>
+                    <div>
+                        <div class="form-group row"><div class="col">Headers <button type="button" class="btn btn-info btn-sm" @onclick="CreateHeader"><i class="oi oi-plus"></i></button></div></div>
+
+                        @if (_newMessage.Headers.Any())
+                        {
+                            @foreach (var header in _newMessage.Headers)
+                            {
+                                <div class="row">
+                                    <div class="col"><input type="text" class="form-control" placeholder="Key" @bind="@header.Key" /></div>
+                                    <div class="col">
+                                        <div class="input-group mb-3">
+                                            <input type="text" class="form-control" placeholder="Value" @bind="@header.Value">
+                                            <div class="input-group-append">
+                                                <button type="button" class="btn btn-outline-danger" @onclick="@(() => RemoveHeader(header))"><i class="oi oi-trash"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            <div class="alert alert-info">Value will always be a string (ex: 42 will result as "42")</div>
+                        }
+                    </div>
+                </div>
+                <hr />
+                <textarea class="form-control" id="message" rows="5" placeholder="{ ... }" @bind="_newMessage.Message" @bind:event="oninput" @onkeyup="OnNewMessageChange"></textarea>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" @onclick="SendMessage" disabled="@string.IsNullOrWhiteSpace(_newMessage)">Send</button>
+                <button type="button" class="btn btn-primary" @onclick="SendMessage" disabled="@string.IsNullOrWhiteSpace(_newMessage.Message)">Send</button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
             </div>
         </div>
