@@ -19,6 +19,7 @@ namespace KafkaTester.Pages
         [Inject] private KafkaTesterService TesterService { get; set; }
         [Inject] private IJSRuntime JsRuntime { get; set; }
         [Inject] public NavigationManager NavigationManager { get; set; }
+        private DotNetObjectReference<Tester>? objRef;
 
         // private OrderingEnum _ordering = OrderingEnum.Desc;
         private string _oldFilterValue;
@@ -167,7 +168,8 @@ namespace KafkaTester.Pages
         private async Task SeeMessage(KafkaMessage message)
         {
             _selectedMessage = message;
-            await JsRuntime.InvokeVoidAsync("openSeeMessageModal");
+            objRef = DotNetObjectReference.Create(this);
+            await JsRuntime.InvokeVoidAsync("openSeeMessageModal", objRef);
         }
 
         private bool DoFilter(KafkaMessage message)
@@ -232,6 +234,7 @@ namespace KafkaTester.Pages
 
         private string JsonPrettify(string json)
         {
+            System.Diagnostics.Trace.WriteLine(json);
             if (IsValidJson(json))
                 return JsonSerializer.Serialize(JsonDocument.Parse(json), new JsonSerializerOptions { WriteIndented = true });
             else
@@ -282,5 +285,8 @@ namespace KafkaTester.Pages
 
             return builder.ToString();
         }
+
+        [JSInvokable]
+        public string GetMessage() => JsonPrettify(_selectedMessage.Message);
     }
 }

@@ -90,7 +90,7 @@
             </tr>
         </thead>
         <tbody>
-            <Virtualize Context="message" Items="@_filterMessages" TItem="KafkaMessage">
+            <Virtualize Context="message" Items="@_filterMessages">
                 <tr>
                     <td class="offset">@message.Offset (@message.Partition)</td>
                     <td class="message">
@@ -125,7 +125,7 @@ else
                     </button>
                 </div>
                 <div class="modal-body">
-                    <pre><code class="@(IsValidJson(_selectedMessage.Message) ? "language-json" : "nohighlight")">@JsonPrettify(_selectedMessage.Message)</code></pre>
+                    <pre><code class="@(IsValidJson(_selectedMessage.Message) ? "language-json" : "nohighlight")">Loading...</code></pre>
                 </div>
                 <div class="modal-subbody">
                     <div class="headers">

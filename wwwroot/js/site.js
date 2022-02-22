@@ -26,11 +26,13 @@ window.showExportConfigurationModal = () => {
 };
 
 var shownEventLoaded = false;
-window.openSeeMessageModal = () => {
+window.openSeeMessageModal = (dotNetHelper) => {
 
     if (!shownEventLoaded) {
         $('#seeMessageModal').on('shown.bs.modal', function() {
-            hljs.highlightAll();
+            dotNetHelper.invokeMethodAsync("GetMessage").then(message => {
+                $("pre code").html(hljs.highlightAuto(message).value);
+            });
         });
         shownEventLoaded = true;
     }
