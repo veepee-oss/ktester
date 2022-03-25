@@ -86,6 +86,7 @@
         <thead>
             <tr>
                 <th class="col-2">Offset (Partition)</th>
+                <th class="col-2">Date & Time</th>
                 <th class="col">Message (@(IsFiltering() ? $"{_filterMessages.Count} item(s) / {_messages.Count} item(s)" : $"{_messages.Count} item(s)"))</th>
             </tr>
         </thead>
@@ -93,6 +94,7 @@
             <Virtualize Context="message" Items="@_filterMessages">
                 <tr>
                     <td class="offset">@message.Offset (@message.Partition)</td>
+                    <td class="datetime">@message.MessageDateTime</td>
                     <td class="message">
                         <button class="btn btn-light" @onclick="() => SeeMessage(message)"><span class="oi oi-eye"></span></button>
                         @message.Message

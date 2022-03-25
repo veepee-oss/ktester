@@ -24,7 +24,8 @@ namespace KafkaTester.Service
             { 
                 GroupId = groupId,
                 BootstrapServers = servers,
-                AutoOffsetReset = AutoOffsetReset.Earliest
+                AutoOffsetReset = AutoOffsetReset.Earliest,
+                EnableAutoCommit = false
             };
 
             using (var c = new ConsumerBuilder<Ignore, string>(conf).SetErrorHandler((consumer, error) =>
@@ -44,6 +45,7 @@ namespace KafkaTester.Service
                             message = new KafkaMessage
                             {
                                 Message = cr.Message.Value,
+                                MessageDateTime = cr.Message.Timestamp.UtcDateTime,
                                 Partition = cr.TopicPartitionOffset.Partition.Value,
                                 Offset = cr.TopicPartitionOffset.Offset.Value,
                                 Headers = cr.Message.Headers.Select(h => new KafkaHeader { Key = h.Key, Value = System.Text.Encoding.Default.GetString(h.GetValueBytes()) }).ToList()

@@ -1,4 +1,5 @@
 
+using System;
 using System.Collections.Generic;
 
 namespace KafkaTester.Model
@@ -12,6 +13,7 @@ namespace KafkaTester.Model
         public string Message { get; set; }
 
         public List<KafkaHeader> Headers { get; set; } = new();
+        public DateTime MessageDateTime { get; set; }
     }
 
     public class KafkaHeader
