@@ -29,8 +29,9 @@ namespace KafkaTester.Pages
         private CancellationTokenSource _cancellationToken;
         private KafkaMessage _newMessage= new KafkaMessage();
         private KafkaMessage _selectedMessage;
+        private bool _isFiltered = false;
         private readonly LinkedList<KafkaMessage> _messages = new();
-        private ICollection<KafkaMessage> _filterMessages => _messages.Where(DoFilter).ToArray();
+        private ICollection<KafkaMessage> _filterMessages => _isFiltered ? _messages.Where(DoFilter).ToArray() : _messages;
         private Dictionary<string, KafkaSetting> _kafkaSettings = new();
         private string _selectedSetting;
         private string _shareConfigurationString;
@@ -89,6 +90,8 @@ namespace KafkaTester.Pages
 
         private void OnFilterChange()
         {
+            _isFiltered = !string.IsNullOrEmpty(_setting.Filter);
+
             if (_oldFilterValue == _setting.Filter)
                 return;
             _oldFilterValue = _setting.Filter;

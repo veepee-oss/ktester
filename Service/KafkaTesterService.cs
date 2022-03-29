@@ -25,7 +25,8 @@ namespace KafkaTester.Service
                 GroupId = groupId,
                 BootstrapServers = servers,
                 AutoOffsetReset = AutoOffsetReset.Earliest,
-                EnableAutoCommit = false
+                EnableAutoCommit = false,
+                EnableAutoOffsetStore = false
             };
 
             using (var c = new ConsumerBuilder<Ignore, string>(conf).SetErrorHandler((consumer, error) =>
