@@ -14,6 +14,7 @@ You can:
 - filter messages
 - save multiple configuration
 - import/export configuration
+- list & select topics of the brokers
 
 More are about to come. Don't hesitate to propose.
 Plan for the future:
