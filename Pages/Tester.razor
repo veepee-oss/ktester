@@ -96,7 +96,7 @@
                     <td class="offset">@message.Offset (@message.Partition)</td>
                     <td class="datetime">@message.MessageDateTime</td>
                     <td class="message">
-                        <button class="btn btn-light" @onclick="() => SeeMessage(message)"><span class="oi oi-eye"></span></button>
+                        <button class="btn btn-light" @onclick="() => ShowSelectedMessage(message)"><span class="oi oi-eye"></span></button>
                         @message.Message
                     </td>
                 </tr>

@@ -168,11 +168,10 @@ namespace KafkaTester.Pages
             await JsRuntime.InvokeVoidAsync("closeSendMessageModal");
         }
 
-        private async Task SeeMessage(KafkaMessage message)
+        private async Task ShowSelectedMessage(KafkaMessage message)
         {
             _selectedMessage = message;
-            objRef = DotNetObjectReference.Create(this);
-            await JsRuntime.InvokeVoidAsync("openSeeMessageModal", objRef);
+            await JsRuntime.InvokeVoidAsync("openSeeMessageModal", JsonPrettify(_selectedMessage.Message));
         }
 
         private bool DoFilter(KafkaMessage message)
@@ -288,8 +287,5 @@ namespace KafkaTester.Pages
 
             return builder.ToString();
         }
-
-        [JSInvokable]
-        public string GetMessage() => JsonPrettify(_selectedMessage.Message);
     }
 }
