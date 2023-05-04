@@ -10,6 +10,7 @@ using KafkaTester.Model;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using KafkaTester.Service;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace KafkaTester.Pages
 {
@@ -27,7 +28,7 @@ namespace KafkaTester.Pages
         private KafkaSetting _setting = new();
         private bool _isSearch;
         private CancellationTokenSource _cancellationToken;
-        private KafkaMessage _newMessage= new KafkaMessage();
+        private KafkaMessage _newMessage = new KafkaMessage();
         private KafkaMessage _selectedMessage;
         private bool _isFiltered = false;
         private readonly LinkedList<KafkaMessage> _messages = new();
@@ -38,6 +39,8 @@ namespace KafkaTester.Pages
         private string _exportConfigurationString;
         private string _importConfigurationString;
         private readonly List<string> _errors = new();
+        private List<string> _topics = new();
+        private bool _isTopicLoading = false;
 
         protected override async Task OnAfterRenderAsync(bool isFirstRender)
         {
@@ -59,13 +62,13 @@ namespace KafkaTester.Pages
         {
             try
             {
-                if (_isSearch && _cancellationToken is {IsCancellationRequested: false})
+                if (_isSearch && _cancellationToken is { IsCancellationRequested: false })
                 {
                     _cancellationToken?.Cancel();
                     _isSearch = false;
                     return;
                 }
-            
+
                 _messages.Clear();
                 _errors.Clear();
                 using (_cancellationToken = new CancellationTokenSource(TimeSpan.FromDays(1)))
@@ -91,7 +94,7 @@ namespace KafkaTester.Pages
                     {
                         if (_cancellationToken.IsCancellationRequested)
                             return;
-                        
+
                         _messages.AddFirst(message);
                         isUIUpdated = false;
                         if (DateTime.UtcNow - lastStateHasChanged > TimeSpan.FromMilliseconds(100))
@@ -119,7 +122,7 @@ namespace KafkaTester.Pages
             _oldFilterValue = _setting.Filter;
             StateHasChanged();
         }
-        
+
         private void OnNewMessageChange()
         {
             StateHasChanged();
@@ -169,8 +172,25 @@ namespace KafkaTester.Pages
             var selectedString = e.Value.ToString();
             _selectedSetting = selectedString;
             if (!_kafkaSettings.TryGetValue(selectedString, out KafkaSetting setting)) return;
-            
+
             _setting = setting;
+        }
+
+        private async Task LoadTopics(MouseEventArgs e)
+        {
+            _topics.Clear();
+            _isTopicLoading = true;
+            var topics = await TesterService.GetTopicsAsync(_setting.Brokers);
+            _topics = topics;
+            _isTopicLoading = false;
+            StateHasChanged();
+        }
+
+        private async Task SelectionTopic(string topic)
+        {
+            _setting.Topic = topic;
+            StateHasChanged();
+            await JsRuntime.InvokeVoidAsync("closeTopicSelectionModal");
         }
 
         private void CreateHeader()
@@ -198,7 +218,7 @@ namespace KafkaTester.Pages
 
         private bool DoFilter(KafkaMessage message)
         {
-            return !IsFiltering() 
+            return !IsFiltering()
                    || IsFiltering() && message.Message.Contains(_setting.Filter, StringComparison.InvariantCultureIgnoreCase);
         }
 
@@ -220,7 +240,7 @@ namespace KafkaTester.Pages
         {
             _exportConfigurationString = await GetLocalStorageAsync<string>("KafkaSettings");
         }
-        
+
         private async Task ImportConfiguration()
         {
             await SaveLocalStorageAsync("KafkaSettings", _importConfigurationString);
@@ -241,12 +261,12 @@ namespace KafkaTester.Pages
         {
             if (value == null)
                 return;
-            
+
             bool isPrimitive = typeof(T).IsPrimitive || typeof(T).IsValueType || typeof(T) == typeof(string);
             await JsRuntime.InvokeAsync<string>("localStorage.setItem",
                 new object[] { key, isPrimitive ? value : Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value))) });
         }
-        
+
         private async Task<T> GetLocalStorageAsync<T>(string key)
         {
             bool isPrimitive = typeof(T).IsPrimitive || typeof(T).IsValueType || typeof(T) == typeof(string);

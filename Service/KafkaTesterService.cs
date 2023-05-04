@@ -68,6 +68,28 @@ namespace KafkaTester.Service
             }
         }
 
+        public async Task<List<string>> GetTopicsAsync(string servers)
+        {
+            var conf = new AdminClientConfig
+            {
+                BootstrapServers = servers
+            };
+
+            try
+            {
+                using (var c = new AdminClientBuilder(conf).Build())
+                {
+                    var metadata = await Task.Run(() => c.GetMetadata(TimeSpan.FromSeconds(10)));
+                    return metadata.Topics.Select(t => t.Topic).ToList();
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return new List<string>();
+            }
+        }
+
         public async Task SendMessageAsync(string servers, string topic, KafkaMessage message)
         {
             _logger.LogInformation("Sending message...");

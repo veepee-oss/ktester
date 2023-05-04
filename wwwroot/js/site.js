@@ -25,6 +25,10 @@ window.showExportConfigurationModal = () => {
     $('#exportConfigurationModal').modal('show');
 };
 
+window.closeTopicSelectionModal = () => {
+    $('#topicSelectionModal').modal('hide');
+};
+
 var shownEventLoaded = false;
 window.openSeeMessageModal = (message) => {
 
