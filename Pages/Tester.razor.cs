@@ -71,13 +71,35 @@ namespace KafkaTester.Pages
                 using (_cancellationToken = new CancellationTokenSource(TimeSpan.FromDays(1)))
                 {
                     _isSearch = true;
+                    DateTime lastStateHasChanged = DateTime.UtcNow;
+                    var isUIUpdated = true;
+                    // Async refresh UI when new message is received and UI is not updated
+                    new Thread(async () =>
+                    {
+                        while (_isSearch)
+                        {
+                            if (!isUIUpdated)
+                            {
+                                await InvokeAsync(StateHasChanged);
+                                isUIUpdated = true;
+                            }
+                            await Task.Delay(1000);
+                        }
+                    }).Start();
+
                     await foreach (var message in TesterService.RunKafkaTesterServiceAsync(_cancellationToken, Guid.NewGuid().ToString(), _setting.Brokers, _setting.Topic, OnError))
                     {
                         if (_cancellationToken.IsCancellationRequested)
                             return;
                         
                         _messages.AddFirst(message);
-                        StateHasChanged();
+                        isUIUpdated = false;
+                        if (DateTime.UtcNow - lastStateHasChanged > TimeSpan.FromMilliseconds(100))
+                        {
+                            StateHasChanged();
+                            lastStateHasChanged = DateTime.UtcNow;
+                            isUIUpdated = true;
+                        }
                     }
                 }
             }
