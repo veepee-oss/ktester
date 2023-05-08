@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using KafkaTester.Service;
 using Microsoft.AspNetCore.Components.Web;
+using static System.Net.WebRequestMethods;
 
 namespace KafkaTester.Pages
 {
@@ -39,7 +40,8 @@ namespace KafkaTester.Pages
         private string _exportConfigurationString;
         private string _importConfigurationString;
         private readonly List<string> _errors = new();
-        private List<string> _topics = new();
+        private List<string> _topics;
+        private List<string> _filteredTopics;
         private bool _isTopicLoading = false;
 
         protected override async Task OnAfterRenderAsync(bool isFirstRender)
@@ -176,9 +178,18 @@ namespace KafkaTester.Pages
             _setting = setting;
         }
 
+        async Task OnTypeTopic(ChangeEventArgs e)
+        {
+            var filter = e.Value?.ToString();
+            await LoadTopics(null);
+            _filteredTopics = _topics.Where(t => t.Contains(filter ?? string.Empty)).ToList();
+        }
+
         private async Task LoadTopics(MouseEventArgs e)
         {
-            _topics.Clear();
+            if (_topics != null || _isTopicLoading)
+                return;
+
             _isTopicLoading = true;
             var topics = await TesterService.GetTopicsAsync(_setting.Brokers);
             _topics = topics;
@@ -190,6 +201,7 @@ namespace KafkaTester.Pages
         {
             _setting.Topic = topic;
             StateHasChanged();
+            _filteredTopics = null;
             await JsRuntime.InvokeVoidAsync("closeTopicSelectionModal");
         }
 
