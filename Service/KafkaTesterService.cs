@@ -85,8 +85,8 @@ namespace KafkaTester.Service
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                return new List<string>();
+                _logger.LogError($"Error occured: {e.Message}");
+                return null;
             }
         }
 

@@ -180,14 +180,33 @@ namespace KafkaTester.Pages
 
         async Task OnTypeTopic(ChangeEventArgs e)
         {
-            var filter = e.Value?.ToString();
+            if (e != null)
+            {
+                _setting.Topic = e.Value.ToString();
+            }
+
+            var filter = _setting.Topic;
+            await JsRuntime.InvokeVoidAsync("console.log", filter);
             await LoadTopics(null);
-            _filteredTopics = _topics.Where(t => t.Contains(filter ?? string.Empty)).ToList();
+            _filteredTopics = _topics?.Where(t => t.Contains(filter ?? string.Empty)).ToList();
+
+            if (_filteredTopics?.Count == 1 && filter.Equals(_filteredTopics.First(), StringComparison.InvariantCultureIgnoreCase))
+                _filteredTopics = null;
+        }
+
+        async Task OnLostTopicFocus(FocusEventArgs e)
+        {
+            await Task.Delay(200).ContinueWith(t => _filteredTopics = null);
+        }
+
+        async Task  OnGetTopicFocus(FocusEventArgs e)
+        {
+            await OnTypeTopic(null);
         }
 
         private async Task LoadTopics(MouseEventArgs e)
         {
-            if (_topics != null || _isTopicLoading)
+            if (_topics != null || _isTopicLoading || string.IsNullOrWhiteSpace(_setting.Brokers))
                 return;
 
             _isTopicLoading = true;

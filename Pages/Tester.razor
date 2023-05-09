@@ -37,7 +37,7 @@
                     <label for="topic" class="col-2 col-form-label text-right">Topic</label>
                     <div class="col-10">
                         <div class="input-group autocomplete">
-                            <input type="text" class="form-control" id="topic" placeholder="topic" @bind="_setting.Topic" @oninput="OnTypeTopic">
+                            <input type="text" class="form-control" id="topic" placeholder="topic" @bind="_setting.Topic" @oninput="OnTypeTopic" @onfocusout="OnLostTopicFocus" @onfocusin="OnGetTopicFocus">
                             @if (_filteredTopics is not null)
                             {
                                 <ul class="options">
