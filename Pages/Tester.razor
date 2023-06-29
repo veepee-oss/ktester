@@ -140,7 +140,7 @@ else
 
 <div class="modal fade" id="seeMessageModal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-        @if (_selectedMessage != null)
+        @*@if (_selectedMessage != null)*@
         {
             <div class="modal-content">
                 <div class="modal-header">
@@ -150,7 +150,11 @@ else
                     </button>
                 </div>
                 <div class="modal-body">
-                    <pre><code class="@(IsValidJson(_selectedMessage.Message) ? "language-json" : "nohighlight")">Loading...</code></pre>
+                    <pre>
+                        <code class="@(IsValidJson(_selectedMessage.Message) ? "language-json" : "nohighlight")">
+                            _selectedMessage.Message
+                        </code>
+                     </pre>
                 </div>
                 <div class="modal-subbody">
                     <div class="headers">

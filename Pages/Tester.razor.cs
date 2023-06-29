@@ -30,7 +30,7 @@ namespace KafkaTester.Pages
         private bool _isSearch;
         private CancellationTokenSource _cancellationToken;
         private KafkaMessage _newMessage = new KafkaMessage();
-        private KafkaMessage _selectedMessage;
+        private KafkaMessage _selectedMessage = new KafkaMessage();
         private bool _isFiltered = false;
         private readonly LinkedList<KafkaMessage> _messages = new();
         private ICollection<KafkaMessage> _filterMessages => _isFiltered ? _messages.Where(DoFilter).ToArray() : _messages;
