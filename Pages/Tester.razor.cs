@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using KafkaTester.Service;
 using Microsoft.AspNetCore.Components.Web;
-using static System.Net.WebRequestMethods;
 
 namespace KafkaTester.Pages
 {
@@ -55,7 +54,6 @@ namespace KafkaTester.Pages
                 {
                     StateHasChanged();
                     await OnSearch();
-                    StateHasChanged();
                 }
             }
         }
@@ -92,6 +90,7 @@ namespace KafkaTester.Pages
                         }
                     }).Start();
 
+                    await InvokeAsync(StateHasChanged);
                     await foreach (var message in TesterService.RunKafkaTesterServiceAsync(_cancellationToken, Guid.NewGuid().ToString(), _setting.Brokers, _setting.Topic, OnError))
                     {
                         if (_cancellationToken.IsCancellationRequested)
