@@ -42,7 +42,7 @@ docker run -p 5000:80 vptech/k-tester
 and go to [http://localhost:5000](http://localhost:5000) on your favorite browser.
 
 ## 2 - Dotnet
-Clone the repository, run the project with (you need to have [dotnet 5.0 sdk](https://dotnet.microsoft.com/download/dotnet) installed):
+Clone the repository, run the project with (you need to have [dotnet 7.0 sdk](https://dotnet.microsoft.com/download/dotnet) installed):
 ```
 dotnet run
 ```
