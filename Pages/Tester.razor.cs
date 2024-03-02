@@ -20,9 +20,7 @@ namespace KafkaTester.Pages
         [Inject] private KafkaTesterService TesterService { get; set; }
         [Inject] private IJSRuntime JsRuntime { get; set; }
         [Inject] public NavigationManager NavigationManager { get; set; }
-        private DotNetObjectReference<Tester>? objRef;
 
-        // private OrderingEnum _ordering = OrderingEnum.Desc;
         private string _oldFilterValue;
         private string _saveSettingName;
         private KafkaSetting _setting = new();
