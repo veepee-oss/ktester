@@ -28,7 +28,13 @@
                 <div class="form-group row">
                     <label for="brokers" class="col-2 col-form-label text-right">Brokers</label>
                     <div class="col-10">
-                        <input type="text" class="form-control" id="brokers" placeholder="host" @bind="_setting.Brokers">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="brokers" placeholder="host" @bind="_setting.Brokers">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#brokerOptionsModal"><span class="oi oi-wrench"></span></button>
+                                <button class="btn btn-outline-secondary @(_setting.IsSaslActivated ? " btn-primary" : string.Empty)" type="button" data-toggle="modal" data-target="#brokerSecurityModal"><span class="oi oi-lock-unlocked"></span></button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -58,7 +64,7 @@
                             }
                             <div class="input-group-append">
                                 <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#topicSelectionModal" @onclick="LoadTopics"><span class="oi oi-justify-center"></span></button>
-                            </div>    
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -142,59 +148,63 @@ else
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         @*@if (_selectedMessage != null)*@
         {
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Message</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <pre>
-                        <code class="@(IsValidJson(_selectedMessage.Message) ? "language-json" : "nohighlight")">
-                            _selectedMessage.Message
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Message</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @if (_selectedMessage.Key is not null)
+                {
+                    <div class="font-weight-bold">@_selectedMessage.Key</div>
+                }
+                <pre>
+                <code class="@(IsValidJson(_selectedMessage.Message) ? "language-json" : "nohighlight")">
+                        @_selectedMessage.Message
                         </code>
                      </pre>
-                </div>
-                <div class="modal-subbody">
-                    <div class="headers">
-                        @if (_selectedMessage.Headers.Any())
-                        {
-                            <div class="collapse" id="collapseExample">
-                                <div class="card card-body">
-                                    <div class="row font-weight-bold">
-                                        <div class="col">Key</div>
-                                        <div class="col">Value</div>
-                                    </div>
-                                    @foreach (var header in _selectedMessage.Headers)
-                                    {
-                                        <div class="row">
-                                            <div class="col">@header.Key</div>
-                                            <div class="col">@header.Value</div>
-                                        </div>
-                                    }
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </div>
-                <div class="modal-footer justify-content-between">
+            </div>
+            <div class="modal-subbody">
+                <div class="headers">
                     @if (_selectedMessage.Headers.Any())
                     {
-                        <a class="btn-header btn btn-outline-dark collapsed" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
-                            <i class="oi oi-caret-top pull-right"></i> @_selectedMessage.Headers.Count Header(s)
-                        </a>
+                        <div class="collapse" id="collapseExample">
+                            <div class="card card-body">
+                                <div class="row font-weight-bold">
+                                    <div class="col">Key</div>
+                                    <div class="col">Value</div>
+                                </div>
+                                @foreach (var header in _selectedMessage.Headers)
+                                {
+                                    <div class="row">
+                                        <div class="col">@header.Key</div>
+                                        <div class="col">@header.Value</div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
                     }
-                    else
-                    {
-                        <div class="font-italic">No header</div>
-                    }
-                    <div>
-                        <button type="button" class="btn btn-light" @onclick="() => CopyMessage(JsonPrettify(_selectedMessage.Message))">Copy</button>
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    </div>
                 </div>
             </div>
+            <div class="modal-footer justify-content-between">
+                @if (_selectedMessage.Headers.Any())
+                {
+                    <a class="btn-header btn btn-outline-dark collapsed" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+                        <i class="oi oi-caret-top pull-right"></i> @_selectedMessage.Headers.Count Header(s)
+                    </a>
+                }
+                else
+                {
+                    <div class="font-italic">No header</div>
+                }
+                <div>
+                    <button type="button" class="btn btn-light" @onclick="() => CopyMessage(JsonPrettify(_selectedMessage.Message))">Copy</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
         }
     </div>
 </div>
@@ -355,7 +365,7 @@ else
             <div class="modal-body">
                 @if (_topics is not null)
                 {
-                    @if(_topics.Count > 0)
+                    @if (_topics.Count > 0)
                     {
                         <div class="list-group" id="topiclist" role="tablist">
                             @foreach (var topic in _topics)
@@ -374,6 +384,86 @@ else
                 {
                     <p>No topics found</p>
                 }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="brokerSecurityModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Security</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="isSaslActivated" @bind="_setting.IsSaslActivated">
+                            <label class="form-check-label" for="isSaslActivated">Activate SASL</label>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="securityProtocol">Security protocol</label>
+                            <select class="form-control" id="securityProtocol" @bind="_setting.SecurityProtocol" disabled="@(!_setting.IsSaslActivated)">
+                                @foreach (var protocol in Enum.GetValues<Confluent.Kafka.SecurityProtocol>())
+                                {
+                                    <option value="@protocol">@protocol</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="saslMechanism">SASL mechanism</label>
+                            <select class="form-control" id="saslMechanism" @bind="_setting.SaslMechanism" disabled="@(!_setting.IsSaslActivated)">
+                                @foreach (var mechanism in Enum.GetValues<Confluent.Kafka.SaslMechanism>())
+                                {
+                                    <option value="@mechanism">@mechanism</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="saslUserName">Username</label>
+                        <input type="text" class="form-control" id="saslUserName" placeholder="username" @bind="_setting.SaslUsername" disabled="@(!_setting.IsSaslActivated)">
+                    </div>
+                    <div class="form-group">
+                        <label for="saslPassword">Password</label>
+                        <input type="password" class="form-control" id="saslPassword" placeholder="password" @bind="_setting.SaslPassword" disabled="@(!_setting.IsSaslActivated)">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="brokerOptionsModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Options</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="isGzipActivated" @bind="_setting.IsGzipActivated">
+                            <label class="form-check-label" for="isGzipActivated">Try activate GZIP decompression (can take more time to process)</label>
+                        </div>
+                    </div>
+                </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

@@ -8,6 +8,9 @@
 .modal-body {
     overflow: auto;
 }
+.modal-body > pre {
+    padding-bottom: 20px;
+}
 .table > tbody > tr > td.message {
     white-space: nowrap;
     overflow: hidden;

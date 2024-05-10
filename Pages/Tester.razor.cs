@@ -41,9 +41,9 @@ namespace KafkaTester.Pages
         private List<string> _filteredTopics;
         private bool _isTopicLoading = false;
 
-        protected override async Task OnAfterRenderAsync(bool isFirstRender)
+        protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            if (isFirstRender)
+            if (firstRender)
             {
                 await Read();
                 StateHasChanged();
@@ -62,7 +62,7 @@ namespace KafkaTester.Pages
             {
                 if (_isSearch && _cancellationToken is { IsCancellationRequested: false })
                 {
-                    _cancellationToken?.Cancel();
+                    _cancellationToken.Cancel();
                     _isSearch = false;
                     return;
                 }
@@ -89,7 +89,7 @@ namespace KafkaTester.Pages
                     }).Start();
 
                     await InvokeAsync(StateHasChanged);
-                    await foreach (var message in TesterService.RunKafkaTesterServiceAsync(_cancellationToken, Guid.NewGuid().ToString(), _setting.Brokers, _setting.Topic, OnError))
+                    await foreach (var message in TesterService.RunKafkaTesterServiceAsync(_cancellationToken, Guid.NewGuid().ToString(), _setting, OnError))
                     {
                         if (_cancellationToken.IsCancellationRequested)
                             return;
@@ -187,7 +187,7 @@ namespace KafkaTester.Pages
             await LoadTopics(null);
             _filteredTopics = _topics?.Where(t => t.Contains(filter ?? string.Empty)).ToList();
 
-            if (_filteredTopics?.Count == 1 && filter.Equals(_filteredTopics.First(), StringComparison.InvariantCultureIgnoreCase))
+            if (_filteredTopics?.Count == 1 && filter.Equals(_filteredTopics[0], StringComparison.InvariantCultureIgnoreCase))
                 _filteredTopics = null;
         }
 
@@ -196,7 +196,7 @@ namespace KafkaTester.Pages
             await Task.Delay(200).ContinueWith(t => _filteredTopics = null);
         }
 
-        async Task  OnGetTopicFocus(FocusEventArgs e)
+        async Task OnGetTopicFocus(FocusEventArgs e)
         {
             await OnTypeTopic(null);
         }
@@ -207,7 +207,7 @@ namespace KafkaTester.Pages
                 return;
 
             _isTopicLoading = true;
-            var topics = await TesterService.GetTopicsAsync(_setting.Brokers);
+            var topics = await TesterService.GetTopicsAsync(_setting);
             _topics = topics;
             _isTopicLoading = false;
             StateHasChanged();

@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO.Compression;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
@@ -18,23 +21,31 @@ namespace KafkaTester.Service
             _logger = logger;
         }
 
-        public async IAsyncEnumerable<KafkaMessage> RunKafkaTesterServiceAsync(CancellationTokenSource cts, string groupId, string servers, string topic, Action<string> onError)
+        public async IAsyncEnumerable<KafkaMessage> RunKafkaTesterServiceAsync(CancellationTokenSource cts, string groupId, KafkaSetting setting, Action<string> onError)
         {
             var conf = new ConsumerConfig
             { 
                 GroupId = groupId,
-                BootstrapServers = servers,
+                BootstrapServers = setting.Brokers,
                 AutoOffsetReset = AutoOffsetReset.Earliest,
                 EnableAutoCommit = false,
                 EnableAutoOffsetStore = false
             };
 
-            using (var c = new ConsumerBuilder<Ignore, string>(conf).SetErrorHandler((consumer, error) =>
+            if (setting.IsSaslActivated)
+            {
+                conf.SaslMechanism = setting.SaslMechanism;
+                conf.SecurityProtocol = setting.SecurityProtocol;
+                conf.SaslUsername = setting.SaslUsername;
+                conf.SaslPassword = setting.SaslPassword;
+            }
+
+            using (var c = new ConsumerBuilder<string, string>(conf).SetErrorHandler((consumer, error) =>
             {
                 onError(error.Reason);
             }).Build())
             {
-                c.Subscribe(topic);
+                c.Subscribe(setting.Topic);
                 while (!cts.IsCancellationRequested)
                 {
                     KafkaMessage message = null;
@@ -43,9 +54,15 @@ namespace KafkaTester.Service
                         await Task.Run(() =>
                         {
                             var cr = c.Consume(cts.Token);
+                            var messageValue = cr.Message.Value;
+                            if (setting.IsGzipActivated && messageValue.StartsWith("H4sIAAAAAAAAA"))
+                            {
+                                messageValue = Decompress(Convert.FromBase64String(messageValue));
+                            }
                             message = new KafkaMessage
                             {
-                                Message = cr.Message.Value,
+                                Key = cr.Message.Key,
+                                Message = messageValue,
                                 MessageDateTime = cr.Message.Timestamp.UtcDateTime,
                                 Partition = cr.TopicPartitionOffset.Partition.Value,
                                 Offset = cr.TopicPartitionOffset.Offset.Value,
@@ -68,12 +85,20 @@ namespace KafkaTester.Service
             }
         }
 
-        public async Task<List<string>> GetTopicsAsync(string servers)
+        public async Task<List<string>> GetTopicsAsync(KafkaSetting setting)
         {
             var conf = new AdminClientConfig
             {
-                BootstrapServers = servers
+                BootstrapServers = setting.Brokers
             };
+
+            if (setting.IsSaslActivated)
+            {
+                conf.SaslMechanism = setting.SaslMechanism;
+                conf.SecurityProtocol = setting.SecurityProtocol;
+                conf.SaslUsername = setting.SaslUsername;
+                conf.SaslPassword = setting.SaslPassword;
+            }
 
             try
             {
@@ -112,6 +137,20 @@ namespace KafkaTester.Service
                 await p.ProduceAsync(topic, new Message<Null, string> { Value = message.Message, Headers = headers });
             }
             _logger.LogInformation("Message sended");
+        }
+
+        private static string Decompress(byte[] bytes)
+        {
+            using (var memoryStream = new MemoryStream(bytes))
+            using (var gZipStream = new GZipStream(memoryStream, CompressionMode.Decompress))
+            using (var memoryStreamOutput = new MemoryStream())
+            {
+                gZipStream.CopyTo(memoryStreamOutput);
+                var outputBytes = memoryStreamOutput.ToArray();
+
+                string decompressed = Encoding.UTF8.GetString(outputBytes);
+                return decompressed;
+            }
         }
     }
 }
