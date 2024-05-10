@@ -15,6 +15,8 @@ You can:
 - save multiple configuration
 - import/export configuration
 - list & select topics of the brokers
+- connect to the brokers with the Security Protocol (SASL, SSL)
+- Activate GZip decompression for the messages
 
 More are about to come. Don't hesitate to propose.
 Plan for the future:
