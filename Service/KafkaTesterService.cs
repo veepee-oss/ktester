@@ -55,7 +55,7 @@ namespace KafkaTester.Service
                         {
                             var cr = c.Consume(cts.Token);
                             var messageValue = cr.Message.Value;
-                            if (setting.IsGzipActivated && messageValue.StartsWith("H4sIAAAAAAAAA"))
+                            if (setting.IsGzipActivated && messageValue.StartsWith("H4sIA"))
                             {
                                 messageValue = Decompress(Convert.FromBase64String(messageValue));
                             }
