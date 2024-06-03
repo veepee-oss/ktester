@@ -1,0 +1,43 @@
+version: "3"
+services:
+
+  ktester:
+    image: ktester:latest
+    build:
+      context: .
+    environment:
+      - ENABLE_OPEN_TELEMETRY=true
+    ports:
+      - "5000:80"
+    networks:
+      - ktester-network
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./Metrics/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - ktester-network
+
+# UI to query traces and metrics
+  grafana:
+    image: grafana/grafana
+    volumes:
+      - ./Metrics/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ./Metrics/grafana_provisioning:/etc/grafana/provisioning/dashboards
+      - ./Metrics/grafana_dashboards/:/var/lib/grafana/dashboards
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
+    ports:
+      - "3000:3000"
+    networks:
+      - ktester-network
+
+networks:
+  ktester-network:
+    driver: bridge
