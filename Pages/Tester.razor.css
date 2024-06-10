@@ -17,6 +17,11 @@
     text-overflow: ellipsis;
     max-width: 0;
 }
+.table > tbody > tr > td small {
+    position:absolute;
+    margin:-10px 0;
+    opacity:0.6;
+}
 
 .btn-header .oi {
     transition: .3s transform ease-in-out;

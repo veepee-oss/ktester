@@ -75,7 +75,12 @@
                 <div class="form-group row">
                     <label for="filter" class="col-2 col-form-label text-right">Filter</label>
                     <div class="col-10">
-                        <input type="text" class="form-control" id="filter" @bind="_setting.Filter" @bind:event="oninput" @onkeyup="OnFilterChange">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="filter" @bind="_setting.Filter" @bind:event="oninput" @onkeyup="OnFilterChange">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#searchSettings"><span class="oi oi-cog"></span></button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -124,9 +129,15 @@
                 <tr>
                     <td class="offset">@message.Offset (@message.Partition)</td>
                     <td class="datetime">@message.MessageDateTime</td>
-                    <td class="message">
-                        <button class="btn btn-light" @onclick="() => ShowSelectedMessage(message)"><span class="oi oi-eye"></span></button>
-                        @message.Message
+                    <td class="message" nowrap>
+                        <button class="btn btn-light d-inline" @onclick="() => ShowSelectedMessage(message)"><span class="oi oi-eye"></span></button>
+                        <div class="d-inline">
+                            @if(message.Key is not null)
+                            {
+                                <small>Key: @message.Key</small>
+                            }
+                            @message.Message.Substring(0, Math.Min(message.Message.Length, 250))
+                        </div>
                     </td>
                 </tr>
             </Virtualize>
@@ -146,8 +157,6 @@ else
 
 <div class="modal fade" id="seeMessageModal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-        @*@if (_selectedMessage != null)*@
-        {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Message</h5>
@@ -155,16 +164,18 @@ else
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body">
-                @if (_selectedMessage.Key is not null)
-                {
+            @if (_selectedMessage.Key is not null)
+            {
+                <div class="modal-header">
                     <div class="font-weight-bold">@_selectedMessage.Key</div>
-                }
+                </div>
+            }
+            <div class="modal-body">
                 <pre>
-                <code class="@(IsValidJson(_selectedMessage.Message) ? "language-json" : "nohighlight")">
+                    <code class="@(IsValidJson(_selectedMessage.Message) ? "language-json" : "nohighlight")">
                         @_selectedMessage.Message
-                        </code>
-                     </pre>
+                    </code>
+                </pre>
             </div>
             <div class="modal-subbody">
                 <div class="headers">
@@ -467,6 +478,37 @@ else
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="searchSettings" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Settings</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="isInvariantCase" @bind="_searchSetting.IsInvariantCase">
+                            <label class="form-check-label" for="isInvariantCase">Invariant case (can take more time)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="hasCheckKey" @bind="_searchSetting.IsCheckKey">
+                            <label class="form-check-label" for="hasCheckKey">Search in the key</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="hasCheckMessage" @bind="_searchSetting.IsCheckMessage">
+                            <label class="form-check-label" for="hasCheckMessage">Search in the message</label>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
