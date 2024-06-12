@@ -1,0 +1,42 @@
+﻿<div class="form-group row">
+    <label for="filter" class="col-2 col-form-label text-right">Filter</label>
+    <div class="col-10">
+        <div class="input-group">
+            <input type="text" class="form-control" id="filter" @bind="Filter.Text" @bind:event="oninput" @onkeyup="OnFilterChange">
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#searchSettings"><span class="oi oi-cog"></span></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="searchSettings" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Settings</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="isInvariantCase" @bind="Filter.IsInvariantCase">
+                            <label class="form-check-label" for="isInvariantCase">Invariant case (can take more time)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="hasCheckKey" @bind="Filter.IsCheckKey">
+                            <label class="form-check-label" for="hasCheckKey">Search in the key</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="hasCheckMessage" @bind="Filter.IsCheckMessage">
+                            <label class="form-check-label" for="hasCheckMessage">Search in the message</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

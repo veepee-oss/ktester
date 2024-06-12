@@ -21,18 +21,14 @@ public partial class Tester
     [Inject] private IJSRuntime JsRuntime { get; set; }
     [Inject] public NavigationManager NavigationManager { get; set; }
 
-    private string _oldFilterValue;
-    private string _saveSettingName;
-    private KafkaSetting _setting = new();
-    private SearchSetting _searchSetting = new();
+    private KafkaSettingsModel _setting = new();
+    private FilterSettingsModel _filter = new();
     private bool _isSearch;
     private CancellationTokenSource _cancellationToken;
     private KafkaMessage _newMessage = new KafkaMessage();
     private KafkaMessage _selectedMessage = new KafkaMessage();
     private readonly LinkedList<KafkaMessage> _messages = new();
     private ICollection<KafkaMessage> _filterMessages => DoFilter();
-    private Dictionary<string, KafkaSetting> _kafkaSettings = new();
-    private string _selectedSetting;
     private string _shareConfigurationString;
     private string _exportConfigurationString;
     private string _importConfigurationString;
@@ -43,17 +39,16 @@ public partial class Tester
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender && SetShareSetting())
         {
-            await Read();
             StateHasChanged();
-
-            if (SetShareSetting())
-            {
-                StateHasChanged();
-                await OnSearch();
-            }
+            await OnSearch();
         }
+    }
+
+    private void Refresh()
+    {
+        StateHasChanged();
     }
 
     private async Task OnSearch()
@@ -89,7 +84,7 @@ public partial class Tester
                 }).Start();
 
                 await InvokeAsync(StateHasChanged);
-                await foreach (var message in TesterService.RunKafkaTesterServiceAsync(_cancellationToken, Guid.NewGuid().ToString(), _setting, OnError))
+                await foreach (var message in TesterService.RunKafkaTesterServiceAsync(_cancellationToken, Guid.NewGuid().ToString(), _setting.CurrentSetting, OnError))
                 {
                     if (_cancellationToken.IsCancellationRequested)
                         return;
@@ -112,75 +107,24 @@ public partial class Tester
         }
     }
 
-    private void OnFilterChange()
-    {
-        if (_oldFilterValue == _setting.Filter)
-            return;
-        _oldFilterValue = _setting.Filter;
-        StateHasChanged();
-    }
-
     private void OnNewMessageChange()
     {
         StateHasChanged();
     }
 
-    private void CopyMessage(string message)
+    private async Task ExportConfiguration()
     {
-        JsRuntime.InvokeVoidAsync("clipboardCopy.copyText", message).ConfigureAwait(true);
-    }
-
-    private async Task Save()
-    {
-        var settings = await GetLocalStorageAsync<Dictionary<string, KafkaSetting>>("KafkaSettings");
-
-        if (settings.ContainsKey(_saveSettingName))
-        {
-            settings[_saveSettingName] = _setting;
-        }
-        else
-        {
-            settings.Add(_saveSettingName, _setting);
-        }
-        await SaveLocalStorageAsync("KafkaSettings", settings);
-        await Read();
-        _selectedSetting = _saveSettingName;
-        _saveSettingName = null;
-        await JsRuntime.InvokeVoidAsync("closeSaveSettingModal");
-    }
-
-    private async Task Read()
-    {
-        _kafkaSettings = await GetLocalStorageAsync<Dictionary<string, KafkaSetting>>("KafkaSettings");
-    }
-
-    private async Task Delete()
-    {
-        _kafkaSettings.Remove(_selectedSetting);
-        await SaveLocalStorageAsync("KafkaSettings", _kafkaSettings);
-        _selectedSetting = string.Empty;
-        _setting = new KafkaSetting();
-        await JsRuntime.InvokeVoidAsync("closeDeleteSettingModal");
-        await Read();
-    }
-
-    private void OnSelectSetting(ChangeEventArgs e)
-    {
-        var selectedString = e.Value.ToString();
-        _selectedSetting = selectedString;
-        if (!_kafkaSettings.TryGetValue(selectedString, out KafkaSetting setting)) return;
-
-        _setting = setting;
+        _exportConfigurationString = await GetLocalStorageAsync<string>("KafkaSettings");
     }
 
     async Task OnTypeTopic(ChangeEventArgs e)
     {
         if (e != null)
         {
-            _setting.Topic = e.Value.ToString();
+            _setting.CurrentSetting.Topic = e.Value.ToString();
         }
 
-        var filter = _setting.Topic;
+        var filter = _setting.CurrentSetting.Topic;
         await JsRuntime.InvokeVoidAsync("console.log", filter);
         await LoadTopics(null);
         _filteredTopics = _topics?.Where(t => t.Contains(filter ?? string.Empty)).ToList();
@@ -201,11 +145,11 @@ public partial class Tester
 
     private async Task LoadTopics(MouseEventArgs e)
     {
-        if (_topics != null || _isTopicLoading || string.IsNullOrWhiteSpace(_setting.Brokers))
+        if (_topics != null || _isTopicLoading || string.IsNullOrWhiteSpace(_setting.CurrentSetting.Brokers))
             return;
 
         _isTopicLoading = true;
-        var topics = await TesterService.GetTopicsAsync(_setting);
+        var topics = await TesterService.GetTopicsAsync(_setting.CurrentSetting);
         _topics = topics;
         _isTopicLoading = false;
         StateHasChanged();
@@ -213,7 +157,7 @@ public partial class Tester
 
     private async Task SelectionTopic(string topic)
     {
-        _setting.Topic = topic;
+        _setting.CurrentSetting.Topic = topic;
         StateHasChanged();
         _filteredTopics = null;
         await JsRuntime.InvokeVoidAsync("closeTopicSelectionModal");
@@ -231,29 +175,23 @@ public partial class Tester
 
     private async Task SendMessage()
     {
-        await TesterService.SendMessageAsync(_setting.Brokers, _setting.Topic, _newMessage);
+        await TesterService.SendMessageAsync(_setting.CurrentSetting.Brokers, _setting.CurrentSetting.Topic, _newMessage);
         _newMessage = new KafkaMessage();
         await JsRuntime.InvokeVoidAsync("closeSendMessageModal");
-    }
-
-    private async Task ShowSelectedMessage(KafkaMessage message)
-    {
-        _selectedMessage = message;
-        await JsRuntime.InvokeVoidAsync("openSeeMessageModal", JsonPrettify(_selectedMessage.Message));
     }
 
     private ICollection<KafkaMessage> DoFilter()
     {
         if (IsFiltering())
         {
-            StringComparison comparison = _searchSetting.IsInvariantCase ? StringComparison.InvariantCultureIgnoreCase : StringComparison.InvariantCulture;
+            StringComparison comparison = _filter.IsInvariantCase ? StringComparison.InvariantCultureIgnoreCase : StringComparison.InvariantCulture;
             var filtered = _messages.AsEnumerable();
-            if (_searchSetting.IsCheckKey && _searchSetting.IsCheckMessage)
-                return filtered.Where(m => (m.Key?.Contains(_setting.Filter, comparison) ?? false) || (m.Message?.Contains(_setting.Filter, comparison) ?? false)).ToArray();
-            if (_searchSetting.IsCheckKey)
-                return filtered.Where(m => m.Key?.Contains(_setting.Filter, comparison) ?? false).ToArray();
-            if (_searchSetting.IsCheckMessage)
-                return filtered.Where(m => m.Message?.Contains(_setting.Filter, comparison) ?? false).ToArray();
+            if (_filter.IsCheckKey && _filter.IsCheckMessage)
+                return filtered.Where(m => (m.Key?.Contains(_filter.Text, comparison) ?? false) || (m.Message?.Contains(_filter.Text, comparison) ?? false)).ToArray();
+            if (_filter.IsCheckKey)
+                return filtered.Where(m => m.Key?.Contains(_filter.Text, comparison) ?? false).ToArray();
+            if (_filter.IsCheckMessage)
+                return filtered.Where(m => m.Message?.Contains(_filter.Text, comparison) ?? false).ToArray();
         }
 
         return _messages.ToArray();
@@ -261,7 +199,7 @@ public partial class Tester
 
     private bool IsFiltering()
     {
-        return !string.IsNullOrWhiteSpace(_setting.Filter);
+        return !string.IsNullOrWhiteSpace(_filter.Text);
     }
 
     private void OnError(string error)
@@ -273,20 +211,9 @@ public partial class Tester
         });
     }
 
-    private async Task ExportConfiguration()
-    {
-        _exportConfigurationString = await GetLocalStorageAsync<string>("KafkaSettings");
-    }
-
     private async Task ImportConfiguration()
     {
         await SaveLocalStorageAsync("KafkaSettings", _importConfigurationString);
-        await Read();
-    }
-
-    private void OnSave()
-    {
-        _saveSettingName = _selectedSetting;
     }
 
     private void OnShare()
@@ -313,31 +240,6 @@ public partial class Tester
         return isPrimitive ? (T)Convert.ChangeType(result, typeof(T)) : JsonSerializer.Deserialize<T>(Encoding.UTF8.GetString(Convert.FromBase64String(result)));
     }
 
-    private string JsonPrettify(string json)
-    {
-        System.Diagnostics.Trace.WriteLine(json);
-        if (IsValidJson(json))
-            return JsonSerializer.Serialize(JsonDocument.Parse(json), new JsonSerializerOptions { WriteIndented = true });
-        else
-            return json;
-    }
-
-    private bool IsValidJson(string source)
-    {
-        if (source == null)
-            return false;
-
-        try
-        {
-            JsonDocument.Parse(source);
-            return true;
-        }
-        catch (JsonException)
-        {
-            return false;
-        }
-    }
-
     private bool SetShareSetting()
     {
         var builder = new UriBuilder(NavigationManager.Uri);
@@ -346,10 +248,10 @@ public partial class Tester
         if (query["b"] == null || query["t"] == null)
             return false;
 
-        _setting.Brokers = query["b"];
-        _setting.Topic = query["t"];
+        _setting.CurrentSetting.Brokers = query["b"];
+        _setting.CurrentSetting.Topic = query["t"];
         if (query["t"] != null)
-            _setting.Filter = query["f"];
+            _filter.Text = query["f"];
 
         return true;
     }
@@ -358,10 +260,10 @@ public partial class Tester
     {
         var builder = new UriBuilder(NavigationManager.BaseUri);
         var query = HttpUtility.ParseQueryString(builder.Query);
-        query["b"] = _setting.Brokers;
-        query["t"] = _setting.Topic;
-        if (!string.IsNullOrWhiteSpace(_setting.Filter))
-            query["f"] = _setting.Filter;
+        query["b"] = _setting.CurrentSetting.Brokers;
+        query["t"] = _setting.CurrentSetting.Topic;
+        if (!string.IsNullOrWhiteSpace(_filter.Text))
+            query["f"] = _filter.Text;
         builder.Query = query.ToString();
 
         return builder.ToString();

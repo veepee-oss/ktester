@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using KafkaTester.Model
+@using KafkaTester.Components
 
 <h2><img class="logo" src="image/logo-mini.png" alt="logo" /> K-Tester</h2>
 <hr />
@@ -7,18 +8,7 @@
     <form>
         <div class="row">
             <div class="col-10">
-                <div class="form-group row">
-                    <label for="settings" class="col-1 col-form-label text-right">Settings</label>
-                    <div class="col-5">
-                        <select id="settings" class="form-control" value="@_selectedSetting" @onchange="OnSelectSetting">
-                            <option value="">No registered</option>
-                            @foreach (var template in _kafkaSettings)
-                            {
-                                <option value=@template.Key>@template.Key</option>
-                            }
-                        </select>
-                    </div>
-                </div>
+                <Settings Setting="@_setting" OnChanged="@Refresh" />
             </div>
         </div>
     </form>
@@ -29,10 +19,10 @@
                     <label for="brokers" class="col-2 col-form-label text-right">Brokers</label>
                     <div class="col-10">
                         <div class="input-group">
-                            <input type="text" class="form-control" id="brokers" placeholder="host" @bind="_setting.Brokers">
+                            <input type="text" class="form-control" id="brokers" placeholder="host" @bind="_setting.CurrentSetting.Brokers">
                             <div class="input-group-append">
                                 <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#brokerOptionsModal"><span class="oi oi-wrench"></span></button>
-                                <button class="btn btn-outline-secondary @(_setting.IsSaslActivated ? " btn-primary" : string.Empty)" type="button" data-toggle="modal" data-target="#brokerSecurityModal"><span class="oi oi-lock-unlocked"></span></button>
+                                <button class="btn btn-outline-secondary @(_setting.CurrentSetting.IsSaslActivated ? " btn-primary" : string.Empty)" type="button" data-toggle="modal" data-target="#brokerSecurityModal"><span class="oi oi-lock-unlocked"></span></button>
                             </div>
                         </div>
                     </div>
@@ -43,7 +33,7 @@
                     <label for="topic" class="col-2 col-form-label text-right">Topic</label>
                     <div class="col-10">
                         <div class="input-group autocomplete">
-                            <input type="text" class="form-control" id="topic" placeholder="topic" @bind="_setting.Topic" @oninput="OnTypeTopic" @onfocusout="OnLostTopicFocus" @onfocusin="OnGetTopicFocus">
+                            <input type="text" class="form-control" id="topic" placeholder="topic" @bind="_setting.CurrentSetting.Topic" @oninput="OnTypeTopic" @onfocusout="OnLostTopicFocus" @onfocusin="OnGetTopicFocus">
                             @if (_filteredTopics is not null)
                             {
                                 <ul class="options">
@@ -72,153 +62,31 @@
         </div>
         <div class="row">
             <div class="col-5">
-                <div class="form-group row">
-                    <label for="filter" class="col-2 col-form-label text-right">Filter</label>
-                    <div class="col-10">
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="filter" @bind="_setting.Filter" @bind:event="oninput" @onkeyup="OnFilterChange">
-                            <div class="input-group-append">
-                                <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#searchSettings"><span class="oi oi-cog"></span></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <FilterSettings Filter="_filter" OnChanged="Refresh" />
             </div>
             <div class="col-5 text-right">
                 <div class="btn-group">
-                    <button type="button" class="btn btn-primary" @onclick="OnSearch" disabled="@(string.IsNullOrWhiteSpace(_setting.Brokers) && string.IsNullOrWhiteSpace(_setting.Topic))">@(_isSearch ? "Stop" : "Search")</button>
+                    <button type="button" class="btn btn-primary" @onclick="OnSearch" disabled="@(string.IsNullOrWhiteSpace(_setting.CurrentSetting.Brokers) && string.IsNullOrWhiteSpace(_setting.CurrentSetting.Topic))">@(_isSearch ? "Stop" : "Search")</button>
                     <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <span class="sr-only">Toggle Dropdown</span>
                     </button>
                     <div class="dropdown-menu dropdown-menu-right">
-                        <button type="button" class="dropdown-item text-success" data-toggle="modal" data-target="#saveSettingModal" @onclick="OnSave" disabled="@(string.IsNullOrWhiteSpace(_setting.Brokers) || string.IsNullOrWhiteSpace(_setting.Topic))"><span class="oi oi-file"></span> Save</button>
-                        <button type="button" class="dropdown-item text-danger" data-toggle="modal" data-target="#deleteSettingModal" disabled="@string.IsNullOrWhiteSpace(_selectedSetting)"><span class="oi oi-trash"></span> Delete</button>
+                        <button type="button" class="dropdown-item text-success" data-toggle="modal" data-target="#saveSettingModal" disabled="@(string.IsNullOrWhiteSpace(_setting.CurrentSetting.Brokers) || string.IsNullOrWhiteSpace(_setting.CurrentSetting.Topic))"><span class="oi oi-file"></span> Save</button>
+                        <button type="button" class="dropdown-item text-danger" data-toggle="modal" data-target="#deleteSettingModal" disabled="@string.IsNullOrWhiteSpace(_setting.CurrentSetting.Name)"><span class="oi oi-trash"></span> Delete</button>
                         <div class="dropdown-divider"></div>
-                        <button type="button" class="dropdown-item" data-toggle="modal" data-target="#sendMessageModal" disabled="@(string.IsNullOrWhiteSpace(_setting.Brokers) && string.IsNullOrWhiteSpace(_setting.Topic))">Send message</button>
+                        <button type="button" class="dropdown-item" data-toggle="modal" data-target="#sendMessageModal" disabled="@(string.IsNullOrWhiteSpace(_setting.CurrentSetting.Brokers) && string.IsNullOrWhiteSpace(_setting.CurrentSetting.Topic))">Send message</button>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="#" data-toggle="modal" data-target="#exportConfigurationModal" @onclick="ExportConfiguration">Export configuration</a>
                         <a class="dropdown-item" href="#" data-toggle="modal" data-target="#importConfigurationModal">Import configuration</a>
                         <div class="dropdown-divider"></div>
-                        <button type="button" class="dropdown-item" data-toggle="modal" data-target="#shareConfigurationModal" @onclick="OnShare" disabled="@(string.IsNullOrWhiteSpace(_setting.Brokers) || string.IsNullOrWhiteSpace(_setting.Topic))"><span class="oi oi-share"></span> Share</button>
+                        <button type="button" class="dropdown-item" data-toggle="modal" data-target="#shareConfigurationModal" @onclick="OnShare" disabled="@(string.IsNullOrWhiteSpace(_setting.CurrentSetting.Brokers) || string.IsNullOrWhiteSpace(_setting.CurrentSetting.Topic))"><span class="oi oi-share"></span> Share</button>
                     </div>
                 </div>
             </div>
         </div>
     </form>
 </div>
-
-<div class="spinner @(_isSearch ? "visible" : "invisible")">
-    <div class="rect1"></div>
-    <div class="rect2"></div>
-    <div class="rect3"></div>
-    <div class="rect4"></div>
-    <div class="rect5"></div>
-</div>
-@if (_messages.Any() || _isSearch)
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th class="col-2">Offset (Partition)</th>
-                <th class="col-2">Date & Time</th>
-                <th class="col">Message (@(IsFiltering() ? $"{_filterMessages.Count} item(s) / {_messages.Count} item(s)" : $"{_messages.Count} item(s)"))</th>
-            </tr>
-        </thead>
-        <tbody>
-            <Virtualize Context="message" Items="@_filterMessages">
-                <tr>
-                    <td class="offset">@message.Offset (@message.Partition)</td>
-                    <td class="datetime">@message.MessageDateTime</td>
-                    <td class="message" nowrap>
-                        <button class="btn btn-light d-inline" @onclick="() => ShowSelectedMessage(message)"><span class="oi oi-eye"></span></button>
-                        <div class="d-inline">
-                            @if(message.Key is not null)
-                            {
-                                <small>Key: @message.Key</small>
-                            }
-                            @message.Message.Substring(0, Math.Min(message.Message.Length, 250))
-                        </div>
-                    </td>
-                </tr>
-            </Virtualize>
-        </tbody>
-    </table>
-}
-else
-{
-    <div class="text-center">No content</div>
-}
-<pre class="text-danger">
-    @foreach (var error in _errors)
-    {
-        @(error + "\n")
-    }
-</pre>
-
-<div class="modal fade" id="seeMessageModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Message</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            @if (_selectedMessage.Key is not null)
-            {
-                <div class="modal-header">
-                    <div class="font-weight-bold">@_selectedMessage.Key</div>
-                </div>
-            }
-            <div class="modal-body">
-                <pre>
-                    <code class="@(IsValidJson(_selectedMessage.Message) ? "language-json" : "nohighlight")">
-                        @_selectedMessage.Message
-                    </code>
-                </pre>
-            </div>
-            <div class="modal-subbody">
-                <div class="headers">
-                    @if (_selectedMessage.Headers.Any())
-                    {
-                        <div class="collapse" id="collapseExample">
-                            <div class="card card-body">
-                                <div class="row font-weight-bold">
-                                    <div class="col">Key</div>
-                                    <div class="col">Value</div>
-                                </div>
-                                @foreach (var header in _selectedMessage.Headers)
-                                {
-                                    <div class="row">
-                                        <div class="col">@header.Key</div>
-                                        <div class="col">@header.Value</div>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    }
-                </div>
-            </div>
-            <div class="modal-footer justify-content-between">
-                @if (_selectedMessage.Headers.Any())
-                {
-                    <a class="btn-header btn btn-outline-dark collapsed" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
-                        <i class="oi oi-caret-top pull-right"></i> @_selectedMessage.Headers.Count Header(s)
-                    </a>
-                }
-                else
-                {
-                    <div class="font-italic">No header</div>
-                }
-                <div>
-                    <button type="button" class="btn btn-light" @onclick="() => CopyMessage(JsonPrettify(_selectedMessage.Message))">Copy</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-        }
-    </div>
-</div>
+<Messages SelectedMessage="@_selectedMessage" IsSearching="@_isSearch" Items="@_filterMessages" Errors="@_errors" FilterSettings="@_filter" CountTotalMessages="@_messages.Count" />
 
 <div class="modal fade" id="sendMessageModal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
@@ -265,46 +133,6 @@ else
     </div>
 </div>
 
-<div class="modal fade" id="saveSettingModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Configuration name</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <input type="text" class="form-control" id="settingName" placeholder="name" @bind="_saveSettingName">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" @onclick="Save" disabled="@string.IsNullOrWhiteSpace(_saveSettingName)">Save</button>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="deleteSettingModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Delete</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure to delete "@_selectedSetting"?</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-danger" @onclick="Delete">Delete</button>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <div class="modal fade" id="importConfigurationModal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -324,7 +152,6 @@ else
         </div>
     </div>
 </div>
-
 
 <div class="modal fade" id="exportConfigurationModal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
@@ -416,14 +243,14 @@ else
                 <form>
                     <div class="form-group">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="isSaslActivated" @bind="_setting.IsSaslActivated">
+                            <input class="form-check-input" type="checkbox" id="isSaslActivated" @bind="_setting.CurrentSetting.IsSaslActivated">
                             <label class="form-check-label" for="isSaslActivated">Activate SASL</label>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group col-6">
                             <label for="securityProtocol">Security protocol</label>
-                            <select class="form-control" id="securityProtocol" @bind="_setting.SecurityProtocol" disabled="@(!_setting.IsSaslActivated)">
+                            <select class="form-control" id="securityProtocol" @bind="_setting.CurrentSetting.SecurityProtocol" disabled="@(!_setting.CurrentSetting.IsSaslActivated)">
                                 @foreach (var protocol in Enum.GetValues<Confluent.Kafka.SecurityProtocol>())
                                 {
                                     <option value="@protocol">@protocol</option>
@@ -432,7 +259,7 @@ else
                         </div>
                         <div class="form-group col-6">
                             <label for="saslMechanism">SASL mechanism</label>
-                            <select class="form-control" id="saslMechanism" @bind="_setting.SaslMechanism" disabled="@(!_setting.IsSaslActivated)">
+                            <select class="form-control" id="saslMechanism" @bind="_setting.CurrentSetting.SaslMechanism" disabled="@(!_setting.CurrentSetting.IsSaslActivated)">
                                 @foreach (var mechanism in Enum.GetValues<Confluent.Kafka.SaslMechanism>())
                                 {
                                     <option value="@mechanism">@mechanism</option>
@@ -442,11 +269,11 @@ else
                     </div>
                     <div class="form-group">
                         <label for="saslUserName">Username</label>
-                        <input type="text" class="form-control" id="saslUserName" placeholder="username" @bind="_setting.SaslUsername" disabled="@(!_setting.IsSaslActivated)">
+                        <input type="text" class="form-control" id="saslUserName" placeholder="username" @bind="_setting.CurrentSetting.SaslUsername" disabled="@(!_setting.CurrentSetting.IsSaslActivated)">
                     </div>
                     <div class="form-group">
                         <label for="saslPassword">Password</label>
-                        <input type="password" class="form-control" id="saslPassword" placeholder="password" @bind="_setting.SaslPassword" disabled="@(!_setting.IsSaslActivated)">
+                        <input type="password" class="form-control" id="saslPassword" placeholder="password" @bind="_setting.CurrentSetting.SaslPassword" disabled="@(!_setting.CurrentSetting.IsSaslActivated)">
                     </div>
                 </form>
             </div>
@@ -470,7 +297,7 @@ else
                 <form>
                     <div class="form-group">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="isGzipActivated" @bind="_setting.IsGzipActivated">
+                            <input class="form-check-input" type="checkbox" id="isGzipActivated" @bind="_setting.CurrentSetting.IsGzipActivated">
                             <label class="form-check-label" for="isGzipActivated">Try activate GZIP decompression (can take more time to process)</label>
                         </div>
                     </div>
@@ -478,37 +305,6 @@ else
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="searchSettings" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Settings</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form>
-                    <div class="form-group">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="isInvariantCase" @bind="_searchSetting.IsInvariantCase">
-                            <label class="form-check-label" for="isInvariantCase">Invariant case (can take more time)</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="hasCheckKey" @bind="_searchSetting.IsCheckKey">
-                            <label class="form-check-label" for="hasCheckKey">Search in the key</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="hasCheckMessage" @bind="_searchSetting.IsCheckMessage">
-                            <label class="form-check-label" for="hasCheckMessage">Search in the message</label>
-                        </div>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
