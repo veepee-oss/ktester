@@ -1,0 +1,115 @@
+﻿<div class="spinner @(Options.IsSearching ? "visible" : "invisible")">
+    <div class="rect1"></div>
+    <div class="rect2"></div>
+    <div class="rect3"></div>
+    <div class="rect4"></div>
+    <div class="rect5"></div>
+</div>
+@if (Items.Any() || Options.IsSearching)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th class="col-2">Offset (Partition)</th>
+                <th class="col-2">Date & Time</th>
+                <th class="col">Message (@(Options.Filter.IsFiltering() ? $"{Items.Count} item(s) / {CountTotalMessages} item(s)" : $"{CountTotalMessages} item(s)"))</th>
+            </tr>
+        </thead>
+        <tbody>
+            <Virtualize Context="message" Items="@Items">
+                <tr>
+                    <td class="offset">@message.Offset (@message.Partition)</td>
+                    <td class="datetime">@message.MessageDateTime</td>
+                    <td class="message" nowrap>
+                        <button class="btn btn-light d-inline" @onclick="() => ShowSelectedMessage(message)"><span class="oi oi-eye"></span></button>
+                        <div class="d-inline">
+                            @if (message.Key is not null)
+                            {
+                                <small>Key: @message.Key</small>
+                            }
+                            @message.Message.Substring(0, Math.Min(message.Message.Length, 250))
+                        </div>
+                    </td>
+                </tr>
+            </Virtualize>
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="text-center">No content</div>
+}
+<pre class="text-danger">
+    @foreach (var error in Errors)
+    {
+        @(error + "\n")
+    }
+</pre>
+
+@if(SelectedMessage is not null)
+{
+    <div class="modal fade" id="seeMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Message</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                @if (SelectedMessage.Key is not null)
+                {
+                    <div class="modal-header">
+                        <div class="font-weight-bold">@SelectedMessage.Key</div>
+                    </div>
+                }
+                <div class="modal-body">
+                    <pre>
+                    <code class="@(IsValidJson(SelectedMessage.Message) ? "language-json" : "nohighlight")">
+                            @SelectedMessage.Message
+                        </code>
+                    </pre>
+                </div>
+                <div class="modal-subbody">
+                    <div class="headers">
+                        @if (SelectedMessage.Headers.Any())
+                        {
+                            <div class="collapse" id="collapseExample">
+                                <div class="card card-body">
+                                    <div class="row font-weight-bold">
+                                        <div class="col">Key</div>
+                                        <div class="col">Value</div>
+                                    </div>
+                                    @foreach (var header in SelectedMessage.Headers)
+                                    {
+                                        <div class="row">
+                                            <div class="col">@header.Key</div>
+                                            <div class="col">@header.Value</div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    @if (SelectedMessage.Headers.Any())
+                    {
+                        <a class="btn-header btn btn-outline-dark collapsed" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+                            <i class="oi oi-caret-top pull-right"></i> @SelectedMessage.Headers.Count Header(s)
+                        </a>
+                    }
+                    else
+                    {
+                        <div class="font-italic">No header</div>
+                    }
+                    <div>
+                        <button type="button" class="btn btn-light" @onclick="() => CopyMessage(JsonPrettify(SelectedMessage.Message))">Copy</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+}

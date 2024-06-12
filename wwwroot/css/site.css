@@ -121,3 +121,16 @@ img.logo {
            -webkit-transform: scaleY(1.0);
        }
 }
+
+.modal-content {
+    max-height: 95vh;
+    overflow-y: auto;
+}
+
+.modal-body {
+    overflow: auto;
+}
+
+    .modal-body > pre {
+        padding-bottom: 20px;
+    }

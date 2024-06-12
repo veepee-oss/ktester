@@ -1,28 +1,3 @@
-.table {
-    max-width: 100%;
-}
-.modal-content {
-    max-height: 95vh;
-    overflow-y: auto;
-}
-.modal-body {
-    overflow: auto;
-}
-.modal-body > pre {
-    padding-bottom: 20px;
-}
-.table > tbody > tr > td.message {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 0;
-}
-.table > tbody > tr > td small {
-    position:absolute;
-    margin:-10px 0;
-    opacity:0.6;
-}
-
 .btn-header .oi {
     transition: .3s transform ease-in-out;
 }

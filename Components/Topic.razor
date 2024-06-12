@@ -1,0 +1,68 @@
+﻿<div class="form-group row">
+    <label for="topic" class="col-2 col-form-label text-right">Topic</label>
+    <div class="col-10">
+        <div class="input-group autocomplete">
+            <input type="text" class="form-control" id="topic" placeholder="topic" @bind="Options.KafkaConfig.CurrentSetting.Topic" @oninput="OnTypeTopic" @onfocusout="OnLostTopicFocus" @onfocusin="OnGetTopicFocus">
+            @if (_filteredTopics is not null)
+            {
+                <ul class="options">
+                    @if (_filteredTopics.Any())
+                    {
+                        @foreach (var topic in _filteredTopics)
+                        {
+                            <li class="option" @onclick=@(_ => SelectionTopic(topic))>
+                                <span class="option-text">@topic</span>
+                            </li>
+                        }
+                    }
+                    else
+                    {
+                        <li class="disabled option">No results</li>
+                    }
+                </ul>
+            }
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#topicSelectionModal" @onclick="LoadTopics"><span class="oi oi-justify-center"></span></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="topicSelectionModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select your topic</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @if (_topics is not null)
+                {
+                    @if (_topics.Count > 0)
+                    {
+                        <div class="list-group" id="topiclist" role="tablist">
+                            @foreach (var topic in _topics)
+                            {
+                                <a class="list-group-item list-group-item-action" id="topic-@topic" href="#" data-toggle="list" @ondblclick="() => SelectionTopic(topic)">@topic</a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p>No topics found</p>
+                    }
+
+                }
+                else
+                {
+                    <p>No topics found</p>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
