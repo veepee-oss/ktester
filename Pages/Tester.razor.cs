@@ -21,8 +21,7 @@ public partial class Tester
     [Inject] private IJSRuntime JsRuntime { get; set; }
     [Inject] public NavigationManager NavigationManager { get; set; }
 
-    private KafkaSettingsModel _setting = new();
-    private FilterSettingsModel _filter = new();
+    private Options _options = new();
     private bool _isSearch;
     private CancellationTokenSource _cancellationToken;
     private KafkaMessage _newMessage = new KafkaMessage();
@@ -33,9 +32,6 @@ public partial class Tester
     private string _exportConfigurationString;
     private string _importConfigurationString;
     private readonly List<string> _errors = new();
-    private List<string> _topics;
-    private List<string> _filteredTopics;
-    private bool _isTopicLoading = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -84,7 +80,7 @@ public partial class Tester
                 }).Start();
 
                 await InvokeAsync(StateHasChanged);
-                await foreach (var message in TesterService.RunKafkaTesterServiceAsync(_cancellationToken, Guid.NewGuid().ToString(), _setting.CurrentSetting, OnError))
+                await foreach (var message in TesterService.RunKafkaTesterServiceAsync(_cancellationToken, Guid.NewGuid().ToString(), _options.KafkaConfig.CurrentSetting, OnError))
                 {
                     if (_cancellationToken.IsCancellationRequested)
                         return;
@@ -117,52 +113,6 @@ public partial class Tester
         _exportConfigurationString = await GetLocalStorageAsync<string>("KafkaSettings");
     }
 
-    async Task OnTypeTopic(ChangeEventArgs e)
-    {
-        if (e != null)
-        {
-            _setting.CurrentSetting.Topic = e.Value.ToString();
-        }
-
-        var filter = _setting.CurrentSetting.Topic;
-        await JsRuntime.InvokeVoidAsync("console.log", filter);
-        await LoadTopics(null);
-        _filteredTopics = _topics?.Where(t => t.Contains(filter ?? string.Empty)).ToList();
-
-        if (_filteredTopics?.Count == 1 && filter.Equals(_filteredTopics[0], StringComparison.InvariantCultureIgnoreCase))
-            _filteredTopics = null;
-    }
-
-    async Task OnLostTopicFocus(FocusEventArgs e)
-    {
-        await Task.Delay(200).ContinueWith(t => _filteredTopics = null);
-    }
-
-    async Task OnGetTopicFocus(FocusEventArgs e)
-    {
-        await OnTypeTopic(null);
-    }
-
-    private async Task LoadTopics(MouseEventArgs e)
-    {
-        if (_topics != null || _isTopicLoading || string.IsNullOrWhiteSpace(_setting.CurrentSetting.Brokers))
-            return;
-
-        _isTopicLoading = true;
-        var topics = await TesterService.GetTopicsAsync(_setting.CurrentSetting);
-        _topics = topics;
-        _isTopicLoading = false;
-        StateHasChanged();
-    }
-
-    private async Task SelectionTopic(string topic)
-    {
-        _setting.CurrentSetting.Topic = topic;
-        StateHasChanged();
-        _filteredTopics = null;
-        await JsRuntime.InvokeVoidAsync("closeTopicSelectionModal");
-    }
-
     private void CreateHeader()
     {
         _newMessage.Headers.Add(new KafkaHeader());
@@ -175,7 +125,7 @@ public partial class Tester
 
     private async Task SendMessage()
     {
-        await TesterService.SendMessageAsync(_setting.CurrentSetting.Brokers, _setting.CurrentSetting.Topic, _newMessage);
+        await TesterService.SendMessageAsync(_options.KafkaConfig.CurrentSetting.Brokers, _options.KafkaConfig.CurrentSetting.Topic, _newMessage);
         _newMessage = new KafkaMessage();
         await JsRuntime.InvokeVoidAsync("closeSendMessageModal");
     }
@@ -184,14 +134,14 @@ public partial class Tester
     {
         if (IsFiltering())
         {
-            StringComparison comparison = _filter.IsInvariantCase ? StringComparison.InvariantCultureIgnoreCase : StringComparison.InvariantCulture;
+            StringComparison comparison = _options.Filter.IsInvariantCase ? StringComparison.InvariantCultureIgnoreCase : StringComparison.InvariantCulture;
             var filtered = _messages.AsEnumerable();
-            if (_filter.IsCheckKey && _filter.IsCheckMessage)
-                return filtered.Where(m => (m.Key?.Contains(_filter.Text, comparison) ?? false) || (m.Message?.Contains(_filter.Text, comparison) ?? false)).ToArray();
-            if (_filter.IsCheckKey)
-                return filtered.Where(m => m.Key?.Contains(_filter.Text, comparison) ?? false).ToArray();
-            if (_filter.IsCheckMessage)
-                return filtered.Where(m => m.Message?.Contains(_filter.Text, comparison) ?? false).ToArray();
+            if (_options.Filter.IsCheckKey && _options.Filter.IsCheckMessage)
+                return filtered.Where(m => (m.Key?.Contains(_options.Filter.Text, comparison) ?? false) || (m.Message?.Contains(_options.Filter.Text, comparison) ?? false)).ToArray();
+            if (_options.Filter.IsCheckKey)
+                return filtered.Where(m => m.Key?.Contains(_options.Filter.Text, comparison) ?? false).ToArray();
+            if (_options.Filter.IsCheckMessage)
+                return filtered.Where(m => m.Message?.Contains(_options.Filter.Text, comparison) ?? false).ToArray();
         }
 
         return _messages.ToArray();
@@ -199,7 +149,7 @@ public partial class Tester
 
     private bool IsFiltering()
     {
-        return !string.IsNullOrWhiteSpace(_filter.Text);
+        return !string.IsNullOrWhiteSpace(_options.Filter.Text);
     }
 
     private void OnError(string error)
@@ -248,10 +198,10 @@ public partial class Tester
         if (query["b"] == null || query["t"] == null)
             return false;
 
-        _setting.CurrentSetting.Brokers = query["b"];
-        _setting.CurrentSetting.Topic = query["t"];
+        _options.KafkaConfig.CurrentSetting.Brokers = query["b"];
+        _options.KafkaConfig.CurrentSetting.Topic = query["t"];
         if (query["t"] != null)
-            _filter.Text = query["f"];
+            _options.Filter.Text = query["f"];
 
         return true;
     }
@@ -260,10 +210,10 @@ public partial class Tester
     {
         var builder = new UriBuilder(NavigationManager.BaseUri);
         var query = HttpUtility.ParseQueryString(builder.Query);
-        query["b"] = _setting.CurrentSetting.Brokers;
-        query["t"] = _setting.CurrentSetting.Topic;
-        if (!string.IsNullOrWhiteSpace(_filter.Text))
-            query["f"] = _filter.Text;
+        query["b"] = _options.KafkaConfig.CurrentSetting.Brokers;
+        query["t"] = _options.KafkaConfig.CurrentSetting.Topic;
+        if (!string.IsNullOrWhiteSpace(_options.Filter.Text))
+            query["f"] = _options.Filter.Text;
         builder.Query = query.ToString();
 
         return builder.ToString();

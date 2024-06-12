@@ -2,7 +2,7 @@
     <label for="filter" class="col-2 col-form-label text-right">Filter</label>
     <div class="col-10">
         <div class="input-group">
-            <input type="text" class="form-control" id="filter" @bind="Filter.Text" @bind:event="oninput" @onkeyup="OnFilterChange">
+            <input type="text" class="form-control" id="filter" @bind="Options.Filter.Text" @bind:event="oninput" @onkeyup="OnFilterChange">
             <div class="input-group-append">
                 <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#searchSettings"><span class="oi oi-cog"></span></button>
             </div>
@@ -23,15 +23,15 @@
                 <form>
                     <div class="form-group">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="isInvariantCase" @bind="Filter.IsInvariantCase">
+                            <input class="form-check-input" type="checkbox" id="isInvariantCase" @bind="Options.Filter.IsInvariantCase">
                             <label class="form-check-label" for="isInvariantCase">Invariant case (can take more time)</label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="hasCheckKey" @bind="Filter.IsCheckKey">
+                            <input class="form-check-input" type="checkbox" id="hasCheckKey" @bind="Options.Filter.IsCheckKey">
                             <label class="form-check-label" for="hasCheckKey">Search in the key</label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="hasCheckMessage" @bind="Filter.IsCheckMessage">
+                            <input class="form-check-input" type="checkbox" id="hasCheckMessage" @bind="Options.Filter.IsCheckMessage">
                             <label class="form-check-label" for="hasCheckMessage">Search in the message</label>
                         </div>
                     </div>

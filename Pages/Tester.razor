@@ -8,7 +8,7 @@
     <form>
         <div class="row">
             <div class="col-10">
-                <Settings Setting="@_setting" OnChanged="@Refresh" />
+                <Settings Options="@_options" OnChanged="@Refresh" />
             </div>
         </div>
     </form>
@@ -19,74 +19,46 @@
                     <label for="brokers" class="col-2 col-form-label text-right">Brokers</label>
                     <div class="col-10">
                         <div class="input-group">
-                            <input type="text" class="form-control" id="brokers" placeholder="host" @bind="_setting.CurrentSetting.Brokers">
+                            <input type="text" class="form-control" id="brokers" placeholder="host" @bind="_options.KafkaConfig.CurrentSetting.Brokers">
                             <div class="input-group-append">
                                 <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#brokerOptionsModal"><span class="oi oi-wrench"></span></button>
-                                <button class="btn btn-outline-secondary @(_setting.CurrentSetting.IsSaslActivated ? " btn-primary" : string.Empty)" type="button" data-toggle="modal" data-target="#brokerSecurityModal"><span class="oi oi-lock-unlocked"></span></button>
+                                <button class="btn btn-outline-secondary @(_options.KafkaConfig.CurrentSetting.IsSaslActivated ? " btn-primary" : string.Empty)" type="button" data-toggle="modal" data-target="#brokerSecurityModal"><span class="oi oi-lock-unlocked"></span></button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="col-5">
-                <div class="form-group row">
-                    <label for="topic" class="col-2 col-form-label text-right">Topic</label>
-                    <div class="col-10">
-                        <div class="input-group autocomplete">
-                            <input type="text" class="form-control" id="topic" placeholder="topic" @bind="_setting.CurrentSetting.Topic" @oninput="OnTypeTopic" @onfocusout="OnLostTopicFocus" @onfocusin="OnGetTopicFocus">
-                            @if (_filteredTopics is not null)
-                            {
-                                <ul class="options">
-                                    @if (_filteredTopics.Any())
-                                    {
-                                        @foreach (var topic in _filteredTopics)
-                                        {
-                                            <li class="option" @onclick=@(_ => SelectionTopic(topic))>
-                                                <span class="option-text">@topic</span>
-                                            </li>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <li class="disabled option">No results</li>
-                                    }
-                                </ul>
-                            }
-                            <div class="input-group-append">
-                                <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#topicSelectionModal" @onclick="LoadTopics"><span class="oi oi-justify-center"></span></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <Topic Options="@_options" />
             </div>
         </div>
         <div class="row">
             <div class="col-5">
-                <FilterSettings Filter="_filter" OnChanged="Refresh" />
+                <Filter Options="@_options" OnChanged="Refresh" />
             </div>
             <div class="col-5 text-right">
                 <div class="btn-group">
-                    <button type="button" class="btn btn-primary" @onclick="OnSearch" disabled="@(string.IsNullOrWhiteSpace(_setting.CurrentSetting.Brokers) && string.IsNullOrWhiteSpace(_setting.CurrentSetting.Topic))">@(_isSearch ? "Stop" : "Search")</button>
+                    <button type="button" class="btn btn-primary" @onclick="OnSearch" disabled="@(string.IsNullOrWhiteSpace(_options.KafkaConfig.CurrentSetting.Brokers) && string.IsNullOrWhiteSpace(_options.KafkaConfig.CurrentSetting.Topic))">@(_isSearch ? "Stop" : "Search")</button>
                     <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <span class="sr-only">Toggle Dropdown</span>
                     </button>
                     <div class="dropdown-menu dropdown-menu-right">
-                        <button type="button" class="dropdown-item text-success" data-toggle="modal" data-target="#saveSettingModal" disabled="@(string.IsNullOrWhiteSpace(_setting.CurrentSetting.Brokers) || string.IsNullOrWhiteSpace(_setting.CurrentSetting.Topic))"><span class="oi oi-file"></span> Save</button>
-                        <button type="button" class="dropdown-item text-danger" data-toggle="modal" data-target="#deleteSettingModal" disabled="@string.IsNullOrWhiteSpace(_setting.CurrentSetting.Name)"><span class="oi oi-trash"></span> Delete</button>
+                        <button type="button" class="dropdown-item text-success" data-toggle="modal" data-target="#saveSettingModal" disabled="@(string.IsNullOrWhiteSpace(_options.KafkaConfig.CurrentSetting.Brokers) || string.IsNullOrWhiteSpace(_options.KafkaConfig.CurrentSetting.Topic))"><span class="oi oi-file"></span> Save</button>
+                        <button type="button" class="dropdown-item text-danger" data-toggle="modal" data-target="#deleteSettingModal" disabled="@string.IsNullOrWhiteSpace(_options.KafkaConfig.CurrentSetting.Name)"><span class="oi oi-trash"></span> Delete</button>
                         <div class="dropdown-divider"></div>
-                        <button type="button" class="dropdown-item" data-toggle="modal" data-target="#sendMessageModal" disabled="@(string.IsNullOrWhiteSpace(_setting.CurrentSetting.Brokers) && string.IsNullOrWhiteSpace(_setting.CurrentSetting.Topic))">Send message</button>
+                        <button type="button" class="dropdown-item" data-toggle="modal" data-target="#sendMessageModal" disabled="@(string.IsNullOrWhiteSpace(_options.KafkaConfig.CurrentSetting.Brokers) && string.IsNullOrWhiteSpace(_options.KafkaConfig.CurrentSetting.Topic))">Send message</button>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="#" data-toggle="modal" data-target="#exportConfigurationModal" @onclick="ExportConfiguration">Export configuration</a>
                         <a class="dropdown-item" href="#" data-toggle="modal" data-target="#importConfigurationModal">Import configuration</a>
                         <div class="dropdown-divider"></div>
-                        <button type="button" class="dropdown-item" data-toggle="modal" data-target="#shareConfigurationModal" @onclick="OnShare" disabled="@(string.IsNullOrWhiteSpace(_setting.CurrentSetting.Brokers) || string.IsNullOrWhiteSpace(_setting.CurrentSetting.Topic))"><span class="oi oi-share"></span> Share</button>
+                        <button type="button" class="dropdown-item" data-toggle="modal" data-target="#shareConfigurationModal" @onclick="OnShare" disabled="@(string.IsNullOrWhiteSpace(_options.KafkaConfig.CurrentSetting.Brokers) || string.IsNullOrWhiteSpace(_options.KafkaConfig.CurrentSetting.Topic))"><span class="oi oi-share"></span> Share</button>
                     </div>
                 </div>
             </div>
         </div>
     </form>
 </div>
-<Messages SelectedMessage="@_selectedMessage" IsSearching="@_isSearch" Items="@_filterMessages" Errors="@_errors" FilterSettings="@_filter" CountTotalMessages="@_messages.Count" />
+<Messages SelectedMessage="@_selectedMessage" IsSearching="@_isSearch" Items="@_filterMessages" Errors="@_errors" Options="@_options" CountTotalMessages="@_messages.Count" />
 
 <div class="modal fade" id="sendMessageModal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
@@ -191,45 +163,6 @@
     </div>
 </div>
 
-<div class="modal fade" id="topicSelectionModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Select your topic</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                @if (_topics is not null)
-                {
-                    @if (_topics.Count > 0)
-                    {
-                        <div class="list-group" id="topiclist" role="tablist">
-                            @foreach (var topic in _topics)
-                            {
-                                <a class="list-group-item list-group-item-action" id="topic-@topic" href="#" data-toggle="list" @ondblclick="() => SelectionTopic(topic)">@topic</a>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <p>No topics found</p>
-                    }
-
-                }
-                else
-                {
-                    <p>No topics found</p>
-                }
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <div class="modal fade" id="brokerSecurityModal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -243,14 +176,14 @@
                 <form>
                     <div class="form-group">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="isSaslActivated" @bind="_setting.CurrentSetting.IsSaslActivated">
+                            <input class="form-check-input" type="checkbox" id="isSaslActivated" @bind="_options.KafkaConfig.CurrentSetting.IsSaslActivated">
                             <label class="form-check-label" for="isSaslActivated">Activate SASL</label>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group col-6">
                             <label for="securityProtocol">Security protocol</label>
-                            <select class="form-control" id="securityProtocol" @bind="_setting.CurrentSetting.SecurityProtocol" disabled="@(!_setting.CurrentSetting.IsSaslActivated)">
+                            <select class="form-control" id="securityProtocol" @bind="_options.KafkaConfig.CurrentSetting.SecurityProtocol" disabled="@(!_options.KafkaConfig.CurrentSetting.IsSaslActivated)">
                                 @foreach (var protocol in Enum.GetValues<Confluent.Kafka.SecurityProtocol>())
                                 {
                                     <option value="@protocol">@protocol</option>
@@ -259,7 +192,7 @@
                         </div>
                         <div class="form-group col-6">
                             <label for="saslMechanism">SASL mechanism</label>
-                            <select class="form-control" id="saslMechanism" @bind="_setting.CurrentSetting.SaslMechanism" disabled="@(!_setting.CurrentSetting.IsSaslActivated)">
+                            <select class="form-control" id="saslMechanism" @bind="_options.KafkaConfig.CurrentSetting.SaslMechanism" disabled="@(!_options.KafkaConfig.CurrentSetting.IsSaslActivated)">
                                 @foreach (var mechanism in Enum.GetValues<Confluent.Kafka.SaslMechanism>())
                                 {
                                     <option value="@mechanism">@mechanism</option>
@@ -269,11 +202,11 @@
                     </div>
                     <div class="form-group">
                         <label for="saslUserName">Username</label>
-                        <input type="text" class="form-control" id="saslUserName" placeholder="username" @bind="_setting.CurrentSetting.SaslUsername" disabled="@(!_setting.CurrentSetting.IsSaslActivated)">
+                        <input type="text" class="form-control" id="saslUserName" placeholder="username" @bind="_options.KafkaConfig.CurrentSetting.SaslUsername" disabled="@(!_options.KafkaConfig.CurrentSetting.IsSaslActivated)">
                     </div>
                     <div class="form-group">
                         <label for="saslPassword">Password</label>
-                        <input type="password" class="form-control" id="saslPassword" placeholder="password" @bind="_setting.CurrentSetting.SaslPassword" disabled="@(!_setting.CurrentSetting.IsSaslActivated)">
+                        <input type="password" class="form-control" id="saslPassword" placeholder="password" @bind="_options.KafkaConfig.CurrentSetting.SaslPassword" disabled="@(!_options.KafkaConfig.CurrentSetting.IsSaslActivated)">
                     </div>
                 </form>
             </div>
@@ -297,7 +230,7 @@
                 <form>
                     <div class="form-group">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="isGzipActivated" @bind="_setting.CurrentSetting.IsGzipActivated">
+                            <input class="form-check-input" type="checkbox" id="isGzipActivated" @bind="_options.KafkaConfig.CurrentSetting.IsGzipActivated">
                             <label class="form-check-label" for="isGzipActivated">Try activate GZIP decompression (can take more time to process)</label>
                         </div>
                     </div>

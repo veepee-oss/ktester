@@ -12,7 +12,7 @@
             <tr>
                 <th class="col-2">Offset (Partition)</th>
                 <th class="col-2">Date & Time</th>
-                <th class="col">Message (@(FilterSettings.IsFiltering() ? $"{Items.Count} item(s) / {CountTotalMessages} item(s)" : $"{CountTotalMessages} item(s)"))</th>
+                <th class="col">Message (@(Options.Filter.IsFiltering() ? $"{Items.Count} item(s) / {CountTotalMessages} item(s)" : $"{CountTotalMessages} item(s)"))</th>
             </tr>
         </thead>
         <tbody>

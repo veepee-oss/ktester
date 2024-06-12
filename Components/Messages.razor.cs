@@ -25,7 +25,7 @@ public partial class Messages
     public KafkaMessage SelectedMessage { get; set; }
 
     [Parameter]
-    public FilterSettingsModel FilterSettings { get; set; }
+    public Options Options { get; set; }
 
     [Parameter]
     public int CountTotalMessages { get; set; }

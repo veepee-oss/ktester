@@ -1,6 +1,6 @@
 ﻿namespace KafkaTester.Model;
 
-public class FilterSettingsModel
+public class FilterSettings
 {
     public string Text { get; set; } = string.Empty;
 

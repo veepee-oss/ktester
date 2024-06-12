@@ -16,7 +16,7 @@ public partial class Settings
     private IJSRuntime JsRuntime { get; set; }
 
     [Parameter]
-    public KafkaSettingsModel Setting { get; set; }
+    public Options Options { get; set; }
 
     [Parameter]
     public EventCallback<KafkaSetting> OnChanged { get; set; }
@@ -36,18 +36,18 @@ public partial class Settings
     private void OnSelectSetting(ChangeEventArgs e)
     {
         var selectedString = e.Value.ToString();
-        if (!Setting.KafkaSettings.TryGetValue(selectedString, out KafkaSetting setting)) return;
+        if (!Options.KafkaConfig.ListKafkaSettings.TryGetValue(selectedString, out KafkaSetting setting)) return;
 
-        Setting.CurrentSetting = setting;
+        Options.KafkaConfig.CurrentSetting = setting;
         OnChanged.InvokeAsync();
     }
 
     private async Task Read()
     {
-        Setting.KafkaSettings = await GetLocalStorageAsync<Dictionary<string, KafkaSetting>>("KafkaSettings");
-        if (Setting.KafkaSettings != null && Setting.KafkaSettings.Count > 0 && Setting.KafkaSettings.First().Value.Name == null)
+        Options.KafkaConfig.ListKafkaSettings = await GetLocalStorageAsync<Dictionary<string, KafkaSetting>>("KafkaSettings");
+        if (Options.KafkaConfig.ListKafkaSettings != null && Options.KafkaConfig.ListKafkaSettings.Count > 0 && Options.KafkaConfig.ListKafkaSettings.First().Value.Name == null)
         {
-            foreach (var (key, value) in Setting.KafkaSettings)
+            foreach (var (key, value) in Options.KafkaConfig.ListKafkaSettings)
             {
                 value.Name = key;
             }
@@ -75,16 +75,16 @@ public partial class Settings
 
     private async Task Save()
     {
-        var name = Setting.CurrentSetting.Name;
+        var name = Options.KafkaConfig.CurrentSetting.Name;
         var settings = await GetLocalStorageAsync<Dictionary<string, KafkaSetting>>("KafkaSettings");
 
         if (settings.ContainsKey(name))
         {
-            settings[name] = Setting.CurrentSetting;
+            settings[name] = Options.KafkaConfig.CurrentSetting;
         }
         else
         {
-            settings.Add(name, Setting.CurrentSetting);
+            settings.Add(name, Options.KafkaConfig.CurrentSetting);
         }
         await SaveLocalStorageAsync("KafkaSettings", settings);
         await Read();
@@ -93,9 +93,9 @@ public partial class Settings
 
     private async Task Delete()
     {
-        Setting.KafkaSettings.Remove(Setting.CurrentSetting.Name);
-        await SaveLocalStorageAsync("KafkaSettings", Setting.KafkaSettings);
-        Setting.CurrentSetting = new KafkaSetting();
+        Options.KafkaConfig.ListKafkaSettings.Remove(Options.KafkaConfig.CurrentSetting.Name);
+        await SaveLocalStorageAsync("KafkaSettings", Options.KafkaConfig.ListKafkaSettings);
+        Options.KafkaConfig.CurrentSetting = new KafkaSetting();
         await JsRuntime.InvokeVoidAsync("closeDeleteSettingModal");
         await Read();
     }

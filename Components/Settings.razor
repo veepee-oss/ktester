@@ -1,9 +1,9 @@
 ﻿<div class="form-group row">
     <label for="settings" class="col-1 col-form-label text-right">Settings</label>
     <div class="col-5">
-        <select id="settings" class="form-control" value="@Setting.CurrentSetting.Name" @onchange="OnSelectSetting">
+        <select id="settings" class="form-control" value="@Options.KafkaConfig.CurrentSetting.Name" @onchange="OnSelectSetting">
             <option value="">No registered</option>
-            @foreach (var template in Setting.KafkaSettings)
+            @foreach (var template in Options.KafkaConfig.ListKafkaSettings)
             {
                 <option value=@template.Key>@template.Key</option>
             }
@@ -21,10 +21,10 @@
                 </button>
             </div>
             <div class="modal-body">
-                <input type="text" class="form-control" id="settingName" placeholder="name" @bind="Setting.CurrentSetting.Name">
+                <input type="text" class="form-control" id="settingName" placeholder="name" @bind="Options.KafkaConfig.CurrentSetting.Name">
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" @onclick="Save" disabled="@string.IsNullOrWhiteSpace(Setting.CurrentSetting.Name)">Save</button>
+                <button type="button" class="btn btn-primary" @onclick="Save" disabled="@string.IsNullOrWhiteSpace(Options.KafkaConfig.CurrentSetting.Name)">Save</button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
             </div>
         </div>
@@ -41,7 +41,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <p>Are you sure to delete "@Setting.CurrentSetting.Name"?</p>
+                <p>Are you sure to delete "@Options.KafkaConfig.CurrentSetting.Name"?</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" @onclick="Delete">Delete</button>

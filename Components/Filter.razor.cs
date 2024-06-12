@@ -3,21 +3,21 @@ using Microsoft.AspNetCore.Components;
 
 namespace KafkaTester.Components;
 
-public partial class FilterSettings
+public partial class Filter
 {
     private string _oldFilterValue;
 
     [Parameter]
-    public FilterSettingsModel Filter { get; set; }
+    public Options Options { get; set; }
 
     [Parameter]
-    public EventCallback<FilterSettingsModel> OnChanged { get; set; }
+    public EventCallback<FilterSettings> OnChanged { get; set; }
 
     private void OnFilterChange()
     {
-        if (_oldFilterValue == Filter.Text)
+        if (_oldFilterValue == Options.Filter.Text)
             return;
-        _oldFilterValue = Filter.Text;
+        _oldFilterValue = Options.Filter.Text;
         OnChanged.InvokeAsync();
     }
 }
