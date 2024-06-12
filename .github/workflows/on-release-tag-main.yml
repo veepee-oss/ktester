@@ -45,3 +45,13 @@ jobs:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+    - name: push README to Dockerhub
+      uses: christian-korneck/update-container-description-action@v1
+      env:
+        DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+        DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
+      with:
+        destination_container_repo: vptech/k-tester
+        provider: dockerhub
+        short_description: 'Testing client tool for Kafka'
+        readme_file: 'README.md'
