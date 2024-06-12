@@ -1,4 +1,5 @@
 ﻿using KafkaTester.Model;
+using KafkaTester.Service;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Collections.Generic;
@@ -9,11 +10,7 @@ namespace KafkaTester.Components;
 
 public partial class Messages
 {
-    [Inject]
-    private IJSRuntime JsRuntime { get; set; }
-
-    [Parameter]
-    public bool IsSearching { get; set; }
+    [Inject] private IJSRuntime JsRuntime { get; set; }
 
     [Parameter]
     public ICollection<KafkaMessage> Items { get; set; }

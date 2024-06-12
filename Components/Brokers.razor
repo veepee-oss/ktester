@@ -1,0 +1,92 @@
+﻿<div class="form-group row">
+    <label for="brokers" class="col-2 col-form-label text-right">Brokers</label>
+    <div class="col-10">
+        <div class="input-group">
+            <input type="text" class="form-control" id="brokers" placeholder="host" @bind="Options.KafkaConfig.CurrentSetting.Brokers">
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#brokerOptionsModal"><span class="oi oi-wrench"></span></button>
+                <button class="btn btn-outline-secondary @(Options.KafkaConfig.CurrentSetting.IsSaslActivated ? " btn-primary" : string.Empty)" type="button" data-toggle="modal" data-target="#brokerSecurityModal"><span class="oi oi-lock-unlocked"></span></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="brokerOptionsModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Options</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="isGzipActivated" @bind="Options.KafkaConfig.CurrentSetting.IsGzipActivated">
+                            <label class="form-check-label" for="isGzipActivated">Try activate GZIP decompression (can take more time to process)</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="brokerSecurityModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Security</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="isSaslActivated" @bind="Options.KafkaConfig.CurrentSetting.IsSaslActivated">
+                            <label class="form-check-label" for="isSaslActivated">Activate SASL</label>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="securityProtocol">Security protocol</label>
+                            <select class="form-control" id="securityProtocol" @bind="Options.KafkaConfig.CurrentSetting.SecurityProtocol" disabled="@(!Options.KafkaConfig.CurrentSetting.IsSaslActivated)">
+                                @foreach (var protocol in Enum.GetValues<Confluent.Kafka.SecurityProtocol>())
+                                {
+                                    <option value="@protocol">@protocol</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="saslMechanism">SASL mechanism</label>
+                            <select class="form-control" id="saslMechanism" @bind="Options.KafkaConfig.CurrentSetting.SaslMechanism" disabled="@(!Options.KafkaConfig.CurrentSetting.IsSaslActivated)">
+                                @foreach (var mechanism in Enum.GetValues<Confluent.Kafka.SaslMechanism>())
+                                {
+                                    <option value="@mechanism">@mechanism</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="saslUserName">Username</label>
+                        <input type="text" class="form-control" id="saslUserName" placeholder="username" @bind="Options.KafkaConfig.CurrentSetting.SaslUsername" disabled="@(!Options.KafkaConfig.CurrentSetting.IsSaslActivated)">
+                    </div>
+                    <div class="form-group">
+                        <label for="saslPassword">Password</label>
+                        <input type="password" class="form-control" id="saslPassword" placeholder="password" @bind="Options.KafkaConfig.CurrentSetting.SaslPassword" disabled="@(!Options.KafkaConfig.CurrentSetting.IsSaslActivated)">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
