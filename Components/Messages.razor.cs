@@ -1,7 +1,7 @@
 ﻿using KafkaTester.Model;
-using KafkaTester.Service;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -30,7 +30,7 @@ public partial class Messages
     private async Task ShowSelectedMessage(KafkaMessage message)
     {
         SelectedMessage = message;
-        await JsRuntime.InvokeVoidAsync("openSeeMessageModal", JsonPrettify(SelectedMessage.Message));
+        await JsRuntime.InvokeVoidAsync("openSeeMessageModal", JsonPrettify(SelectedMessage.Message.ToText(tryGZipDecompression: Options.KafkaConfig.CurrentSetting.IsGzipActivated)));
     }
 
     private string JsonPrettify(string json)

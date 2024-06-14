@@ -51,10 +51,10 @@
                     </div>
                 </div>
                 <hr />
-                <textarea class="form-control" id="message" rows="5" placeholder="{ ... }" @bind="_newMessage.Message" @bind:event="oninput" @onkeyup="OnNewMessageChange"></textarea>
+                <textarea class="form-control" id="message" rows="5" placeholder="{ ... }" @bind="_newMessageText" @bind:event="oninput" @onkeyup="OnNewMessageChange"></textarea>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" @onclick="SendMessage" disabled="@string.IsNullOrWhiteSpace(_newMessage.Message)">Send</button>
+                <button type="button" class="btn btn-primary" @onclick="SendMessage" disabled="@string.IsNullOrWhiteSpace(_newMessageText)">Send</button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
             </div>
         </div>
