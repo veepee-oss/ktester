@@ -18,6 +18,8 @@ public partial class Topic
     [Parameter]
     public Options Options { get; set; }
 
+    [Parameter]
+    public EventCallback<FilterSettings> OnChanged { get; set; }
 
     private List<string> _topics;
     private List<string> _filteredTopics;
@@ -37,6 +39,8 @@ public partial class Topic
 
         if (_filteredTopics?.Count == 1 && filter.Equals(_filteredTopics[0], StringComparison.InvariantCultureIgnoreCase))
             _filteredTopics = null;
+
+        await OnChanged.InvokeAsync();
     }
 
     async Task OnLostTopicFocus(FocusEventArgs e)
@@ -64,7 +68,7 @@ public partial class Topic
     private async Task SelectionTopic(string topic)
     {
         Options.KafkaConfig.CurrentSetting.Topic = topic;
-        StateHasChanged();
+        await OnChanged.InvokeAsync();
         _filteredTopics = null;
         await JsRuntime.InvokeVoidAsync("closeTopicSelectionModal");
     }

@@ -2,7 +2,7 @@
     <label for="brokers" class="col-2 col-form-label text-right">Brokers</label>
     <div class="col-10">
         <div class="input-group">
-            <input type="text" class="form-control" id="brokers" placeholder="host" @bind="Options.KafkaConfig.CurrentSetting.Brokers">
+            <input type="text" class="form-control" id="brokers" placeholder="host" @bind="Options.KafkaConfig.CurrentSetting.Brokers" @bind:event="oninput" @onkeyup="OnBrokersChange">
             <div class="input-group-append">
                 <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#brokerOptionsModal"><span class="oi oi-wrench"></span></button>
                 <button class="btn btn-outline-secondary @(Options.KafkaConfig.CurrentSetting.IsSaslActivated ? " btn-primary" : string.Empty)" type="button" data-toggle="modal" data-target="#brokerSecurityModal"><span class="oi oi-lock-unlocked"></span></button>
@@ -24,8 +24,8 @@
                 <form>
                     <div class="form-group">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="isGzipActivated" @bind="Options.KafkaConfig.CurrentSetting.IsGzipActivated">
-                            <label class="form-check-label" for="isGzipActivated">Try activate GZIP decompression (can take more time to process)</label>
+                            <input class="form-check-input" type="checkbox" id="isCompressionActivated" @bind="Options.KafkaConfig.CurrentSetting.IsTryDecompressMessage">
+                            <label class="form-check-label" for="isCompressionActivated">Try data decompression (GZIP or MsgPack, can take more time to process)</label>
                         </div>
                     </div>
                 </form>

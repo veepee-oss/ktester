@@ -27,7 +27,7 @@
                             {
                                 <small>Key: @message.Key.ToText()</small>
                             }
-                            @message.Message.ToText(250, Options.KafkaConfig.CurrentSetting.IsGzipActivated))
+                            @message.Message.ToText(250, Options.KafkaConfig.CurrentSetting.IsTryDecompressMessage))
                         </div>
                     </td>
                 </tr>
@@ -46,10 +46,9 @@ else
     }
 </pre>
 
-@if(SelectedMessage is not null)
-{
-    string keyTmp = SelectedMessage.Key?.ToText() ?? string.Empty;
-    string messageTmp = SelectedMessage.Message.ToText();
+@{
+    string keyTmp = SelectedMessage?.Key?.ToText() ?? string.Empty;
+    string messageTmp = SelectedMessage?.Message.ToText(tryDecompression: Options.KafkaConfig.CurrentSetting.IsTryDecompressMessage);
     <div class="modal fade" id="seeMessageModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -74,7 +73,7 @@ else
                 </div>
                 <div class="modal-subbody">
                     <div class="headers">
-                        @if (SelectedMessage.Headers.Any())
+                        @if (SelectedMessage?.Headers?.Any() ?? false)
                         {
                             <div class="collapse" id="collapseExample">
                                 <div class="card card-body">
@@ -95,7 +94,7 @@ else
                     </div>
                 </div>
                 <div class="modal-footer justify-content-between">
-                    @if (SelectedMessage.Headers.Any())
+                    @if (SelectedMessage?.Headers?.Any() ?? false)
                     {
                         <a class="btn-header btn btn-outline-dark collapsed" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
                             <i class="oi oi-caret-top pull-right"></i> @SelectedMessage.Headers.Count Header(s)

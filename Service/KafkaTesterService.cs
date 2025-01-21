@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO.Compression;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -55,7 +53,7 @@ namespace KafkaTester.Service
                         {
                             var cr = c.Consume(cts.Token);
                             byte[] data = cr.Message.Value;
-                            if (setting.IsGzipActivated && data.Length > 3 && data[0] == 72 && data[1] == 52 && data[2] == 115)
+                            if (setting.IsTryDecompressMessage && data.Length > 3 && data[0] == 72 && data[1] == 52 && data[2] == 115)
                             {
                                 data = Convert.FromBase64String(Encoding.UTF8.GetString(cr.Message.Value));
                             }

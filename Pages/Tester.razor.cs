@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using KafkaTester.Model;
 using Microsoft.AspNetCore.Components;
 using KafkaTester.Service;
+using MessagePack;
 
 namespace KafkaTester.Pages;
 

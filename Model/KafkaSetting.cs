@@ -13,6 +13,6 @@ namespace KafkaTester.Model
         public SaslMechanism SaslMechanism { get; set; }
         public string SaslUsername { get; set; }
         public string SaslPassword { get; set; }
-        public bool IsGzipActivated { get; set; }
+        public bool IsTryDecompressMessage { get; set; }
     }
 }

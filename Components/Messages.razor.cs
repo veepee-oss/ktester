@@ -30,12 +30,13 @@ public partial class Messages
     private async Task ShowSelectedMessage(KafkaMessage message)
     {
         SelectedMessage = message;
-        await JsRuntime.InvokeVoidAsync("openSeeMessageModal", JsonPrettify(SelectedMessage.Message.ToText(tryGZipDecompression: Options.KafkaConfig.CurrentSetting.IsGzipActivated)));
+        await JsRuntime.InvokeVoidAsync("openSeeMessageModal",
+            JsonPrettify(SelectedMessage.Message.ToText(tryDecompression: Options.KafkaConfig.CurrentSetting.IsTryDecompressMessage)),
+            message.Message.Length < 100000);
     }
 
     private string JsonPrettify(string json)
     {
-        System.Diagnostics.Trace.WriteLine(json);
         if (IsValidJson(json))
             return JsonSerializer.Serialize(JsonDocument.Parse(json), new JsonSerializerOptions { WriteIndented = true });
         else
@@ -52,8 +53,9 @@ public partial class Messages
             JsonDocument.Parse(source);
             return true;
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
+            System.Diagnostics.Trace.WriteLine(ex);
             return false;
         }
     }
