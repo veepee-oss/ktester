@@ -25,9 +25,9 @@
                         <div class="d-inline">
                             @if (message.Key is not null)
                             {
-                                <small>Key: @message.Key</small>
+                                <small>Key: @message.Key.ToText()</small>
                             }
-                            @message.Message.Substring(0, Math.Min(message.Message.Length, 250))
+                            @message.Message.ToText(250, Options.KafkaConfig.CurrentSetting.IsTryDecompressMessage))
                         </div>
                     </td>
                 </tr>
@@ -46,8 +46,9 @@ else
     }
 </pre>
 
-@if(SelectedMessage is not null)
-{
+@{
+    string keyTmp = SelectedMessage?.Key?.ToText() ?? string.Empty;
+    string messageTmp = SelectedMessage?.Message.ToText(tryDecompression: Options.KafkaConfig.CurrentSetting.IsTryDecompressMessage);
     <div class="modal fade" id="seeMessageModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -57,22 +58,22 @@ else
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                @if (SelectedMessage.Key is not null)
+                @if (keyTmp is not null)
                 {
                     <div class="modal-header">
-                        <div class="font-weight-bold">@SelectedMessage.Key</div>
+                        <div class="font-weight-bold">@keyTmp</div>
                     </div>
                 }
                 <div class="modal-body">
                     <pre>
-                    <code class="@(IsValidJson(SelectedMessage.Message) ? "language-json" : "nohighlight")">
-                            @SelectedMessage.Message
+                    <code class="@(IsValidJson(messageTmp) ? "language-json" : "nohighlight")">
+                            @messageTmp
                         </code>
                     </pre>
                 </div>
                 <div class="modal-subbody">
                     <div class="headers">
-                        @if (SelectedMessage.Headers.Any())
+                        @if (SelectedMessage?.Headers?.Any() ?? false)
                         {
                             <div class="collapse" id="collapseExample">
                                 <div class="card card-body">
@@ -93,7 +94,7 @@ else
                     </div>
                 </div>
                 <div class="modal-footer justify-content-between">
-                    @if (SelectedMessage.Headers.Any())
+                    @if (SelectedMessage?.Headers?.Any() ?? false)
                     {
                         <a class="btn-header btn btn-outline-dark collapsed" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
                             <i class="oi oi-caret-top pull-right"></i> @SelectedMessage.Headers.Count Header(s)
@@ -104,7 +105,7 @@ else
                         <div class="font-italic">No header</div>
                     }
                     <div>
-                        <button type="button" class="btn btn-light" @onclick="() => CopyMessage(JsonPrettify(SelectedMessage.Message))">Copy</button>
+                        <button type="button" class="btn btn-light" @onclick="() => CopyMessage(JsonPrettify(messageTmp))">Copy</button>
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     </div>
                 </div>

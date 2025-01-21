@@ -15,15 +15,15 @@
     <form>
         <div class="row">
             <div class="col-5">
-                <Brokers Options="@Options" />
+                <Brokers Options="@Options" OnChanged="@Refresh" />
             </div>
             <div class="col-5">
-                <Topic Options="@Options" />
+                <Topic Options="@Options" OnChanged="@Refresh" />
             </div>
         </div>
         <div class="row">
             <div class="col-5">
-                <Filter Options="@Options" OnChanged="Refresh" />
+                <Filter Options="@Options" OnChanged="@Refresh" />
             </div>
             <div class="col-5 text-right">
                 <SearchButton Options="@Options" OnSearch="@OnSearch" />

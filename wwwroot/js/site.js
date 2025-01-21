@@ -29,7 +29,15 @@ window.closeTopicSelectionModal = () => {
     $('#topicSelectionModal').modal('hide');
 };
 
-window.openSeeMessageModal = (message) => {
-    $("#seeMessageModal pre code").html(hljs.highlightAuto(message).value)
+window.openSeeMessageModal = (message, shouldHighlight) => {
+    if (shouldHighlight) {
+        $("#seeMessageModal pre code").html(hljs.highlightAuto(message).value);
+    } else {
+        $("#seeMessageModal pre code").html(message);
+    }
     $('#seeMessageModal').modal('show');
 };
+
+$("#seeMessageModal").on("hidden.bs.modal", function () {
+    $("#seeMessageModal pre code").html("");
+});

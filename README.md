@@ -23,7 +23,6 @@ Plan for the future:
 - Specify the groupid (verify if all messages of the group has been retreived)
 - Clean the messages for a group
 - Choose display ordering
-- Improve performance for heavy messages
 
 ## More to know
 K-Tester is made with dotnet [BlazorServer](https://docs.microsoft.com/en-us/aspnet/core/blazor) technology.

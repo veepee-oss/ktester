@@ -23,6 +23,7 @@ public partial class SearchButton
     public EventCallback OnSearch { get; set; }
 
     private KafkaMessage _newMessage = new KafkaMessage();
+    private string _newMessageText;
     private string _exportConfigurationString;
     private string _importConfigurationString;
     private string _shareConfigurationString;
@@ -58,6 +59,7 @@ public partial class SearchButton
 
     private async Task SendMessage()
     {
+        _newMessage.Message = Encoding.UTF8.GetBytes(_newMessageText);
         await TesterService.SendMessageAsync(Options.KafkaConfig.CurrentSetting.Brokers, Options.KafkaConfig.CurrentSetting.Topic, _newMessage);
         _newMessage = new KafkaMessage();
         await JsRuntime.InvokeVoidAsync("closeSendMessageModal");

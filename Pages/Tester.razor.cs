@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using KafkaTester.Model;
 using Microsoft.AspNetCore.Components;
 using KafkaTester.Service;
+using MessagePack;
 
 namespace KafkaTester.Pages;
 
@@ -89,11 +90,11 @@ public partial class Tester
             StringComparison comparison = Options.Filter.IsInvariantCase ? StringComparison.InvariantCultureIgnoreCase : StringComparison.InvariantCulture;
             var filtered = AllMessages.AsEnumerable();
             if (Options.Filter.IsCheckKey && Options.Filter.IsCheckMessage)
-                return filtered.Where(m => (m.Key?.Contains(Options.Filter.Text, comparison) ?? false) || (m.Message?.Contains(Options.Filter.Text, comparison) ?? false)).ToArray();
+                return filtered.Where(m => (m.Key?.ToText().Contains(Options.Filter.Text, comparison) ?? false) || (m.Message?.ToText().Contains(Options.Filter.Text, comparison) ?? false)).ToArray();
             if (Options.Filter.IsCheckKey)
-                return filtered.Where(m => m.Key?.Contains(Options.Filter.Text, comparison) ?? false).ToArray();
+                return filtered.Where(m => m.Key?.ToText().Contains(Options.Filter.Text, comparison) ?? false).ToArray();
             if (Options.Filter.IsCheckMessage)
-                return filtered.Where(m => m.Message?.Contains(Options.Filter.Text, comparison) ?? false).ToArray();
+                return filtered.Where(m => m.Message?.ToText().Contains(Options.Filter.Text, comparison) ?? false).ToArray();
         }
 
         return AllMessages.ToArray();

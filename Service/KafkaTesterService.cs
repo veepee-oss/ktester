@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO.Compression;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -40,7 +38,7 @@ namespace KafkaTester.Service
                 conf.SaslPassword = setting.SaslPassword;
             }
 
-            using (var c = new ConsumerBuilder<string, string>(conf).SetErrorHandler((consumer, error) =>
+            using (var c = new ConsumerBuilder<byte[], byte[]>(conf).SetErrorHandler((consumer, error) =>
             {
                 onError(error.Reason);
             }).Build())
@@ -54,15 +52,16 @@ namespace KafkaTester.Service
                         await Task.Run(() =>
                         {
                             var cr = c.Consume(cts.Token);
-                            var messageValue = cr.Message.Value;
-                            if (setting.IsGzipActivated && messageValue.StartsWith("H4sIA"))
+                            byte[] data = cr.Message.Value;
+                            if (setting.IsTryDecompressMessage && data.Length > 3 && data[0] == 72 && data[1] == 52 && data[2] == 115)
                             {
-                                messageValue = Decompress(Convert.FromBase64String(messageValue));
+                                data = Convert.FromBase64String(Encoding.UTF8.GetString(cr.Message.Value));
                             }
+
                             message = new KafkaMessage
                             {
                                 Key = cr.Message.Key,
-                                Message = messageValue,
+                                Message = data,
                                 MessageDateTime = cr.Message.Timestamp.UtcDateTime,
                                 Partition = cr.TopicPartitionOffset.Partition.Value,
                                 Offset = cr.TopicPartitionOffset.Offset.Value,
@@ -132,25 +131,11 @@ namespace KafkaTester.Service
                 headers.Add(item.Key, System.Text.Encoding.Default.GetBytes(item.Value));
             }
 
-            using (var p = new ProducerBuilder<Null, string>(conf).Build())
+            using (var p = new ProducerBuilder<Null, byte[]>(conf).Build())
             {
-                await p.ProduceAsync(topic, new Message<Null, string> { Value = message.Message, Headers = headers });
+                await p.ProduceAsync(topic, new Message<Null, byte[]> { Value = message.Message, Headers = headers });
             }
             _logger.LogInformation("Message sended");
-        }
-
-        private static string Decompress(byte[] bytes)
-        {
-            using (var memoryStream = new MemoryStream(bytes))
-            using (var gZipStream = new GZipStream(memoryStream, CompressionMode.Decompress))
-            using (var memoryStreamOutput = new MemoryStream())
-            {
-                gZipStream.CopyTo(memoryStreamOutput);
-                var outputBytes = memoryStreamOutput.ToArray();
-
-                string decompressed = Encoding.UTF8.GetString(outputBytes);
-                return decompressed;
-            }
         }
     }
 }
